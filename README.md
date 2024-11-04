@@ -21,3 +21,6 @@ para acomodá-lo.
 * first fit: percorre a lista do início e escolhe o primeiro nó com tamanho maior ou igual ao solicitado;
 * best fit: percorre toda a lista e seleciona o nó com menor bloco, que é maior do que o solicitado; 
 * next fit: é first fit em uma lista circular. A busca começa onde a última parou.
+
+# Links
+https://man7.org/linux/man-pages/man2/brk.2.html
