@@ -5,22 +5,51 @@ Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
 * e) Escolha dos nós livres: best fit: percorre toda a lista e seleciona o nó com menor bloco que é maior do que o solicitado;
 
 ## Enunciado do livro
-![image](https://github.com/user-attachments/assets/81695c7f-87fc-4dee-a3b1-bfae04468154)
+![image](https://hackmd.io/_uploads/ry0M2IfWkg.png)
 
 ### 6.2 implemente as seguintes variações:
 **a)** faça a fusão de nós livres;
-
 **b)** use duas regiões: uma para as informações gerenciais e uma para os nós;
-
 **c)** minimize o número de chamadas ao serviço brk alocando espaços múltiplos de 4096 bytes por vez. Se for solicitado um espaço maior, digamos 5000 bytes, então será alocado um espaço de 4096 ∗ 2 = 8192 bytes
 para acomodá-lo.
-
 **d)** utilize duas listas: uma com os nós livres e uma com os ocupados;
-
 **e)** escreva variações do algoritmo de escolha dos nós livres:
 * first fit: percorre a lista do início e escolhe o primeiro nó com tamanho maior ou igual ao solicitado;
 * best fit: percorre toda a lista e seleciona o nó com menor bloco, que é maior do que o solicitado; 
 * next fit: é first fit em uma lista circular. A busca começa onde a última parou.
 
+# Implementação em C
+
+## brk()
+
+```cpp=
+#include <unistd.h>
+
+int brk(void *addr); Sets the program break to the location specified by end_data_segment.
+```
+### Descrição
+Define o final do segmento de dados para o valor especificado por addr
+## sbrk()
+```cpp=
+#include <unistd.h>
+#include <stdio.h>
+
+int main(int argc, char *argv[]){
+
+    void *currentBreak = sbrk(0x5);
+    printf("First increment of 0x5: %p\n",currentBreak);
+
+    currentBreak = sbrk(0x5);
+    printf("Second increment of 0x5: %p\n",currentBreak);
+}
+```
+### Descrição
+sbrk() incrementa o espaço de dados do programa em bytes de incremento. Chamar sbrk() com paramtro 0 pode ser usado para encontrar a localização atual da interrupção do programa.
+#### Retorno:
+Retorna um ponteiro pro inicio da memória recem alocada (se o parametro for 0 retorna o program break anterior) ou void -1 em caso de erro
+
 # Links
-https://man7.org/linux/man-pages/man2/brk.2.html
+
+[Man brk](https://man7.org/linux/man-pages/man2/brk.2.html)
+
+[Understanding Heap Memory Allocation in C — sbrk and brk](https://scottc130.medium.com/understanding-heap-memory-allocation-in-c-sbrk-and-brk-d9b95c344cbc)
