@@ -5,7 +5,8 @@ Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
 * e) Escolha dos nós livres: best fit: percorre toda a lista e seleciona o nó com menor bloco que é maior do que o solicitado;
 
 ## Enunciado do livro
-![image](https://hackmd.io/_uploads/ry0M2IfWkg.png)
+![image](https://github.com/user-attachments/assets/d28ae9b7-c205-4c3e-a99a-af6211473415)
+
 
 ### 6.2 implemente as seguintes variações:
 **a)** faça a fusão de nós livres;
