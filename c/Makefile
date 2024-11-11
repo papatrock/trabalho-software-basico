@@ -1,9 +1,10 @@
-
 CFLAGS = -Wall
 Objs = main.o heap-lib.o
 
-
 all: main
+
+debug: CFLAGS += -D_DEBUG_ -g
+debug: all
 
 main: $(Objs)
 	gcc $(Objs) $(CFLAGS) -o main

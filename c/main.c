@@ -1,13 +1,32 @@
 #include "main.h"
 
 void *a;
+void *base;
+void *topo;
 
 int main(int argc, char **argv)
 {
-    void *b;
-    iniciaAlocador();
+    base = topo = NULL;
+    if (iniciaAlocador(&base,&topo))
+        printf("erro ao iniciar alocador\n");
+    
+    printf("base: %p\ntopo: %p\n",base,topo);
+
+    
     a = alocaMem(100);
-    b = alocaMem(200);
+
+    strcpy (a, "Preenchimento de Vetor");
+    
+    printf("%s\n",(char*)a);
+    
+
+    void *inicio = sbrk(0);
+    void *fim = inicio + 100;
+
+    printf("inicio: %p\nfim: %p\n",inicio,fim);
+    /*b = alocaMem(200);
+    
+
     
     strcpy (a, "Preenchimento de Vetor");
     strcpy(b, a);
@@ -17,8 +36,8 @@ int main(int argc, char **argv)
 
     a = alocaMem(50);
     liberaMem(a);
-
-    finalizaAlocador();
+    */
+    //finalizaAlocador();
 
     return 0;
 }
