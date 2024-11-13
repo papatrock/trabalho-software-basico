@@ -18,9 +18,9 @@ void iniciaAlocador(void **base, void **topo){
     *topo = sbrk(0);
    
     //TODO inicializar as duas lista, como faz isso sem malloc? boa pergunta
-    struct nodo_t blocosLivres;
-    struct nodo_t blocosOcupados;
-
+    nodo_t blocosLivres = iniciaBloco(1000);
+    nodo_t blocosOcupados = iniciaBloco(1000);
+    
 
     
     #ifdef _DEBUG_
@@ -36,6 +36,19 @@ void iniciaAlocador(void **base, void **topo){
 void *alocaMem(int bytes){
 
     return sbrk(bytes);
+}
+/*
+ * Inicia um bloco de TAM bytes
+ * TODO posicionar o bloco novo no fim da lista de blocos livres
+ */
+nodo_t inciaBloco(int tam){
+    noto_t bloco;
+    blocos.status = 0;
+    blocos.tam = 0;
+    blocos.prox = NULL;
+    blocos.endereco = sbrk(tam);
+
+    return bloco;
 }
 
 

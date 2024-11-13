@@ -7,8 +7,7 @@ void *topo;
 int main(int argc, char **argv)
 {
     base = topo = NULL;
-    if (iniciaAlocador(&base,&topo))
-        printf("erro ao iniciar alocador\n");
+    iniciaAlocador(&base,&topo);
     
     printf("base: %p\ntopo: %p\n",base,topo);
 
