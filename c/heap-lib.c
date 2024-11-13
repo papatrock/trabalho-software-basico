@@ -5,23 +5,20 @@
 
 
 /*
-*
 * Cria as estruturas de gerenciamento da heap
 * Aloca 4096 bytes na heap e aponta o ponteiro
 * base para base da alocação
 * e o ponteiro topo para o topo da alocação
 * TODO criar estruturas de dados para gerenciamento da heap
 */
-void iniciaAlocador(void **base, void **topo){
-    *base = sbrk(0);
-    sbrk(4096);
-    *topo = sbrk(0);
-   
-    //TODO inicializar as duas lista, como faz isso sem malloc? boa pergunta
-    nodo_t blocosLivres = iniciaBloco(1000);
-    nodo_t blocosOcupados = iniciaBloco(1000);
-    
-
+void iniciaAlocador(nodo_t *blocosLivres, nodo_t *blocosOcupados){
+    /*
+     * lista de blocos vazio aponta para o inicio
+     * e de blocos ocupados para NULL (nenhum bloco ocupado ainda);
+     */
+    blocosLivres = iniciaBloco(0,NULL);
+    blocosOcupados = iniciaBloco(0,NULL);
+    blocosOcupados->endereco = NULL;
     
     #ifdef _DEBUG_
     printf("base: %p\ntopo: %p\n",*base,*topo);
@@ -39,15 +36,22 @@ void *alocaMem(int bytes){
 }
 /*
  * Inicia um bloco de TAM bytes
- * TODO posicionar o bloco novo no fim da lista de blocos livres
+ * posiciona o bloco novo no fim da lista de blocos
  */
-nodo_t inciaBloco(int tam){
-    noto_t bloco;
-    blocos.status = 0;
-    blocos.tam = 0;
-    blocos.prox = NULL;
-    blocos.endereco = sbrk(tam);
+nodo_t *iniciaBloco(int tam, nodo_t inicio){
+    nodo_t *bloco;
+    bloco->status = 0;
+    bloco->tam = 0;
+    bloco->endereco = sbrk(tam);
+    bloco->prox = NULL;
+    //aloca na lista
+    
+    if(inicio == NULL)
+        return bloco;
 
+    for(noto_t nodo = inicio; nodo.prox != NULL; nodo = nodo.prox){}
+    
+    nodo.prox = bloco;
     return bloco;
 }
 
