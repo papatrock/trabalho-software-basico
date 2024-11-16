@@ -3,7 +3,8 @@
 #include <stdio.h>
 
 
-
+extern nodo_t *blocosLivres;
+extern nodo_t *blocosOcupados;
 /*
 * Cria as estruturas de gerenciamento da heap
 * Aloca 4096 bytes na heap e aponta o ponteiro
@@ -11,20 +12,55 @@
 * e o ponteiro topo para o topo da alocação
 * TODO criar estruturas de dados para gerenciamento da heap
 */
-void iniciaAlocador(nodo_t *blocosLivres, nodo_t *blocosOcupados){
+void iniciaAlocador()
+{
     /*
-     * lista de blocos vazio aponta para o inicio
-     * e de blocos ocupados para NULL (nenhum bloco ocupado ainda);
+     * lista de blocos livres aponta para o início,
+     * e de blocos ocupados para NULL (nenhum bloco ocupado ainda)->
      */
-    blocosLivres = iniciaBloco(0,NULL);
-    blocosOcupados = iniciaBloco(0,NULL);
-    blocosOcupados->endereco = NULL;
+    blocosLivres = iniciaBloco(0, NULL);
+    blocosOcupados = NULL;
+    
     
     #ifdef _DEBUG_
-    printf("base: %p\ntopo: %p\n",*base,*topo);
+    printf("Lista de blocos livres: %p\n", (void *)blocosLivres);
+    printf("Lista de blocos ocupados: %p\n", (void *)blocosOcupados);
     #endif
-
 }
+
+/*
+ * Inicia um bloco de TAM bytes
+ * posiciona o bloco novo no fim da lista de blocos
+ */
+nodo_t *iniciaBloco(int tam, nodo_t *inicio){
+    nodo_t *bloco = (nodo_t *)sbrk(sizeof(nodo_t));
+    if(bloco == (void *)-1){
+        printf("Erro ao alocar memória\n");
+        return NULL;
+    }
+
+    bloco->status = 0;
+    bloco->tam = 0;
+    bloco->endereco = sbrk(tam);
+    if(bloco->endereco == (void *)-1){
+        printf("Erro ao alocar memória\n");
+        return NULL;
+    }
+
+    bloco->prox = NULL;    
+    if(inicio == NULL)
+        return bloco;
+
+    //coloca o bloco no final da lista
+    nodo_t *nodo = inicio;
+    while (nodo->prox != NULL) {
+        nodo = nodo->prox;
+    }
+    
+    nodo->prox = bloco;
+    return bloco;
+}
+
 /*
  *solicita a alocação de um bloco com num_bytes bytes
  *na heap e que retorne o ende-reço inicial deste bloco
@@ -33,26 +69,6 @@ void iniciaAlocador(nodo_t *blocosLivres, nodo_t *blocosOcupados){
 void *alocaMem(int bytes){
 
     return sbrk(bytes);
-}
-/*
- * Inicia um bloco de TAM bytes
- * posiciona o bloco novo no fim da lista de blocos
- */
-nodo_t *iniciaBloco(int tam, nodo_t inicio){
-    nodo_t *bloco;
-    bloco->status = 0;
-    bloco->tam = 0;
-    bloco->endereco = sbrk(tam);
-    bloco->prox = NULL;
-    //aloca na lista
-    
-    if(inicio == NULL)
-        return bloco;
-
-    for(noto_t nodo = inicio; nodo.prox != NULL; nodo = nodo.prox){}
-    
-    nodo.prox = bloco;
-    return bloco;
 }
 
 
@@ -66,8 +82,8 @@ void finalizaAlocador(){
 
 
 /*
- *Devolve para a heap o bloco que foi alocado por alocaMem.
- *O parâmetro bloco é o ende-reço retornado por alocaMem.
+ *Devolve para a heap o bloco que foi alocado por alocaMem->
+ *O parâmetro bloco é o ende-reço retornado por alocaMem->
  *
  * */
 int liberaMem(void *bloco){

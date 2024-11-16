@@ -10,9 +10,9 @@ struct nodo {
 };
 typedef struct nodo nodo_t;
 
-void iniciaAlocador(nodo_t *blocosLivres,nodo_t *blocosOcupados);
+void iniciaAlocador();
 
 
 void *alocaMem(int bytes);
 
-nodo_t *iniciaBloco(int tam,nodo_t inicio);
+nodo_t *iniciaBloco(int tam,nodo_t *inicio);

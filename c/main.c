@@ -1,12 +1,14 @@
 #include "main.h"
 
 void *a;
-nodo_t blocosLivre;
-nodo_t blocoOcupados;
+nodo_t *blocosLivres;
+nodo_t *blocosOcupados;
 
 int main(int argc, char **argv)
 {
-    iniciaAlocador(&blocosLivre,&blocoOcupados);
+    //nodo_t blocosLivre;
+    //nodo_t blocoOcupados;
+    iniciaAlocador();
     
 
     /*b = alocaMem(200);
