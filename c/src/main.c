@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../include/main.h"
 
 nodo_t *blocosLivres;
 nodo_t *blocosOcupados;
