@@ -57,18 +57,35 @@ void iniciaAlocador()
  * @return ponteiro para o inicio do bloco
  */
 void *alocaMem(int bytes){
-    //TODO encontrar o melhor bloco
-    nodo_t *nodo = blocosLivres;
 
-    //lista vazia
-    if(nodo->endereco == NULL && nodo->prox == NULL){
-        nodo->endereco = sbrk(4096); //TODO implementar verificador de acesso (nosso proprio segfault)
-        nodo->status = 1;
-        nodo->tam = bytes;
-        return nodo->endereco;
+    if (blocosLivres == NULL || blocosLivres->endereco == NULL) {
+        size_t tam;
+        
+        // Calcula o tamanho (multiplo de 4096)
+        if (bytes <= 4096)
+            tam = 4096;
+        else
+            tam = ((bytes + 4096 - 1) / 4096) * 4096;
+        
+        nodo_t *novoNodo = (nodo_t *)sbrk(tam);
+        if (novoNodo == (void *)-1) {
+            // Erro ao alocar memória
+            perror("Erro ao alocar memória com sbrk");
+            return NULL;
+        }
 
+        // Inicializa o novo nodo
+        novoNodo->endereco = novoNodo;
+        novoNodo->status = 1;
+        novoNodo->tam = bytes;
+        novoNodo->prox = NULL;
+
+        // Insere o novo nodo na lista de blocos ocupados
+        insereNoFim(blocosOcupados, novoNodo);
+        return novoNodo->endereco;
     }
-
+    
+    nodo_t *nodo = blocosLivres;
     while (nodo->prox != NULL)
         nodo = nodo->prox;
     
