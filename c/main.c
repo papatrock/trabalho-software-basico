@@ -1,6 +1,5 @@
 #include "main.h"
 
-void *a;
 nodo_t *blocosLivres;
 nodo_t *blocosOcupados;
 
@@ -11,13 +10,14 @@ int main(int argc, char **argv)
     iniciaAlocador();
     
 
-    /*b = alocaMem(200);
-    
+    void *b = alocaMem(200);
+    void *a = alocaMem(100);
 
     
     strcpy (a, "Preenchimento de Vetor");
     strcpy(b, a);
-    
+    printf("a:%s addr:%p\nb:%s addr:%p\n",(char*)a,a,(char*)b,b);
+    /*
     liberaMem(a);
     liberaMem(b);
 
