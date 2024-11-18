@@ -12,7 +12,7 @@ typedef struct nodo nodo_t;
 
 void printLista(nodo_t *inicio);
 
-int insereNoFim(nodo_t *inicio, nodo_t *nodo);
+nodo_t* insereNoFim(nodo_t *inicio, nodo_t *nodo);
 
 int insereNaPosicao(nodo_t *inicio,void* endereco, nodo_t *nodo);
 

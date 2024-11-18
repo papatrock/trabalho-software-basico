@@ -5,20 +5,21 @@ nodo_t *blocosOcupados;
 
 int main(int argc, char **argv)
 {
-    //nodo_t blocosLivre;
-    //nodo_t blocoOcupados;
     iniciaAlocador();
-    
     void *a = alocaMem(100);
-    //void *b = alocaMem(200);
+    void *b = alocaMem(200);
 
-    //printLista(blocosLivres);
+    #ifdef _DEBUG_
+    printf("blocos livres:\n");
+    printLista(blocosLivres);
+    printf("\nblocos ocupados:\n");
     printLista(blocosOcupados);
+    #endif
 
     
     strcpy (a, "Preenchimento de Vetor");
     printf("a:%s addr:%p\n",(char*)a,a);
-    //strcpy(b, a);
+    strcpy(b, a);
     //printf("a:%s addr:%p\nb:%s addr:%p\n",(char*)a,a,(char*)b,b);
     /*
     liberaMem(a);

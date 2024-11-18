@@ -14,18 +14,19 @@ void printLista(nodo_t *inicio){
     }
 }
 
-int insereNoFim(nodo_t *inicio, nodo_t *nodo){
-    if (inicio == NULL || nodo == NULL) {
-        return 0; 
+nodo_t* insereNoFim(nodo_t *inicio, nodo_t *nodo){
+    if (nodo == NULL) {
+        return inicio;
     }
 
     nodo->prox = NULL;
 
-    if (inicio == NULL){
+    // Primeiro da lista
+    if (inicio->endereco == NULL && inicio->prox == NULL) {
         inicio = nodo;
-        return 1;
+        return inicio;
     }
-    
+
     nodo_t *tmp = inicio;
 
     while (tmp->prox != NULL)
@@ -33,14 +34,14 @@ int insereNoFim(nodo_t *inicio, nodo_t *nodo){
 
     tmp->prox = nodo;
 
-
-    return 1;
+    return inicio;
 }
 
 int insereNaPosicao(nodo_t *inicio,void* endereco, nodo_t *nodo){
 
     return 1;
 }
+
 /*
 * Não remover nodo de uma lista sem antes alocar na outra
 * para nao ter leaks (sdds free())

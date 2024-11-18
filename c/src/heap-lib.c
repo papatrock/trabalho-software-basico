@@ -34,7 +34,7 @@ void iniciaAlocador()
     }
 
     blocosLivres = (nodo_t*) bloco1;
-    blocosLivres->endereco = NULL;
+    blocosLivres->endereco = sbrk(0); //inicio da lista aponta para começo da
     blocosLivres->prox = NULL;
     blocosLivres->status = 0;
     blocosLivres->tam = 0;
@@ -46,7 +46,7 @@ void iniciaAlocador()
     blocosOcupados->tam = 0;
     
     #ifdef _DEBUG_
-    printf("Lista de blocos livres: %p\n", (void *)blocosLivres);
+    printf("Lista de blocos livres: %p\nEndereço:%p\n", (void *)blocosLivres,blocosLivres->endereco);
     printf("Lista de blocos ocupados: %p\n", (void *)blocosOcupados);
     #endif
 }
@@ -58,7 +58,7 @@ void iniciaAlocador()
  */
 void *alocaMem(int bytes){
 
-    if (blocosLivres == NULL || blocosLivres->endereco == NULL) {
+    if (blocosLivres->prox == NULL) {
         size_t tam;
         
         // Calcula o tamanho (multiplo de 4096)
@@ -81,7 +81,7 @@ void *alocaMem(int bytes){
         novoNodo->prox = NULL;
 
         // Insere o novo nodo na lista de blocos ocupados
-        insereNoFim(blocosOcupados, novoNodo);
+        blocosOcupados = insereNoFim(blocosOcupados, novoNodo);
         return novoNodo->endereco;
     }
     
