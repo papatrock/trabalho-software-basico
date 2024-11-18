@@ -1,3 +1,18 @@
+# Todo
+- [ ] inicia alocador
+    - [ ] colocar uma variavel "maior bloco"
+- [ ] Aloca mem
+    - [x] primeira alocação
+    - [ ] n alocações
+    - [ ] best fit
+- [ ] libera mem
+    - [ ] zerar memoria, colocar o nodo na lista de blocos livres e retirar da lista de blocos ocupados
+    - [ ] ao liberar memoria verificar se blocos adjacentes estão livres, se sim fazer a fusão
+- [ ] Finaliza alocador
+- [ ] Funções auxiliares
+    - [ ] insere na posição x
+    - [ ] limpa nodo
+
 # Enunciado
 Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
 Especificação (2024/2): Página 97 (Projetos de Implementação) 
