@@ -9,7 +9,7 @@ void printLista(nodo_t *inicio){
     nodo_t *tmp = inicio;
     
     while (tmp != NULL) {
-        printf("Endereco: %p, Status: %d, Tam: %d\n", tmp->endereco, tmp->status, tmp->tam);
+        printf("Ponteiro:%p\nEndereco: %p, Status: %d, Tam: %d\n",tmp,tmp->endereco, tmp->status, tmp->tam);
         tmp = tmp->prox;
     }
 }
@@ -79,3 +79,4 @@ int comparaNodo(nodo_t *nodo1, nodo_t *nodo2) {
            nodo1->tam == nodo2->tam &&
            nodo1->prox == nodo2->prox;
 }
+

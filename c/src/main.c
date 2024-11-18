@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 {
     iniciaAlocador();
     void *a = alocaMem(100);
-    printf("%p\n,addr:%p\nprox:%p\nstatus:%d\ntam:%d",blocosLivres,blocosLivres->endereco,blocosLivres->prox,blocosLivres->status,blocosLivres->tam);    
+    printf("%p\naddr:%p\nprox:%p\nstatus:%d\ntam:%d\n\n",blocosLivres,blocosLivres->endereco,blocosLivres->prox,blocosLivres->status,blocosLivres->tam);    
 
     //void *b = alocaMem(200);
     //printf("\n\n%p\n,addr:%p\nprox:%p\nstatus:%d\ntam:%d",blocosLivres,blocosLivres->endereco,blocosLivres->prox,blocosLivres->status,blocosLivres->tam);    
@@ -18,6 +18,7 @@ int main(int argc, char **argv)
     #ifdef _DEBUG_
     printf("blocos livres:\n");
     printLista(blocosLivres);
+    printf("------------------\n");
     printf("\nblocos ocupados:\n");
     printLista(blocosOcupados);
     #endif

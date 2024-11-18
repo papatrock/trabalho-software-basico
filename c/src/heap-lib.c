@@ -69,9 +69,9 @@ void *alocaMem(int bytes){
         
         nodo_t *novoNodo = blocosLivres;
 
+
         // Inicializa o novo nodo ocupado
         novoNodo->endereco = sbrk(tam);
-        printf("addr novo nodo: %p\n",novoNodo->endereco);
         if (novoNodo->endereco == (void *)-1) {
             // Erro ao alocar memória
             perror("Erro ao alocar memória com sbrk");
@@ -84,9 +84,14 @@ void *alocaMem(int bytes){
 
         // Insere o novo nodo na lista de blocos ocupados
         blocosOcupados = insereNoFim(blocosOcupados, novoNodo);
-
-        // Cria o novo nodo livre com a memoria restante
         
+        // Cria o novo nodo livre com a memoria restante
+        blocosLivres = novoNodo + sizeof(nodo_t);
+        blocosLivres->endereco = novoNodo->endereco + novoNodo->tam;
+        blocosLivres->prox = NULL;
+        blocosLivres->status = 0;
+        blocosLivres->tam = tam - novoNodo->tam;
+
         return novoNodo->endereco;
     }
 
