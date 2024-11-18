@@ -90,8 +90,6 @@ void *alocaMem(int bytes){
 
         return novoNodo->endereco;
     }
-
-    //daqui pra baixo ta errado
     
     nodo_t *tmp = blocosLivres;
     while (tmp->prox != NULL)
@@ -123,10 +121,9 @@ nodo_t *bestFit(nodo_t *inicio,size_t tam){
     nodo_t *bestFit = NULL;
 
     while(tmp != NULL){
-        if(tmp->tam >= tam && (bestFit == NULL || tmp->tam < bestFit->tam)){
-            printf("AAAAAAAAAAAAAAAAA\n");
+        if(tmp->tam >= tam && (bestFit == NULL || tmp->tam < bestFit->tam))
             bestFit = tmp;
-        }
+        
         tmp = tmp->prox;
     }
 
