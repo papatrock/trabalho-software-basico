@@ -46,26 +46,26 @@ int insereNaPosicao(nodo_t *inicio,void* endereco, nodo_t *nodo){
 * Não remover nodo de uma lista sem antes alocar na outra
 * para nao ter leaks (sdds free())
 */
-int removeNodo(nodo_t *inicio, nodo_t *nodo){
+nodo_t* removeNodo(nodo_t *inicio, nodo_t *nodo){
     if (inicio == NULL || nodo == NULL) {
-        return -1;
+        return NULL;
     }
 
     nodo_t *tmp = inicio;
 
     if (comparaNodo(tmp, nodo)) {
         inicio = tmp->prox; 
-        return 1;
+        return inicio;
     }
 
     while (tmp->prox != NULL && !comparaNodo(tmp->prox, nodo))
         tmp = tmp->prox;
 
-    if (tmp->prox == NULL)
-        return 0; // Nodo não está na lista
+    if (tmp->prox == NULL) // Nodo não está na lista
+        return inicio;  //retorna lista sem alteracao
     
     tmp->prox = tmp->prox->prox;
-    return 1;
+    return inicio;
 }
 
 int comparaNodo(nodo_t *nodo1, nodo_t *nodo2) {
