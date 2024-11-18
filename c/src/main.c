@@ -7,8 +7,6 @@ int main(int argc, char **argv)
 {
     iniciaAlocador();
     void *a = alocaMem(100);
-    printf("%p\naddr:%p\nprox:%p\nstatus:%d\ntam:%d\n\n",blocosLivres,blocosLivres->endereco,blocosLivres->prox,blocosLivres->status,blocosLivres->tam);    
-
     //void *b = alocaMem(200);
     //printf("\n\n%p\n,addr:%p\nprox:%p\nstatus:%d\ntam:%d",blocosLivres,blocosLivres->endereco,blocosLivres->prox,blocosLivres->status,blocosLivres->tam);    
     //printf("\n\n");
@@ -23,7 +21,7 @@ int main(int argc, char **argv)
     printLista(blocosOcupados);
     #endif
     strcpy (a, "Preenchimento de Vetor");
-    printf("a:%s addr:%p\n",(char*)a,a);
+    printf("a:%s\n addr:%p\n",(char*)a,a);
     //strcpy(b, a);
     //printf("a:%s addr:%p\nb:%s addr:%p\n",(char*)a,a,(char*)b,b);
     /*

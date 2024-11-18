@@ -44,11 +44,6 @@ void iniciaAlocador()
     blocosOcupados->prox = NULL;
     blocosOcupados->status = 0;
     blocosOcupados->tam = 0;
-    
-    #ifdef _DEBUG_
-    printf("Lista de blocos livres: %p\nEndereço:%p\n", (void *)blocosLivres,blocosLivres->endereco);
-    printf("Lista de blocos ocupados: %p\n", (void *)blocosOcupados);
-    #endif
 }
 
 /**
