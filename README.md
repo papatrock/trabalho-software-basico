@@ -4,6 +4,7 @@
 - [ ] Aloca mem
     - [x] primeira alocação
     - [ ] n alocações
+    - [ ] criar mais espaço se alocação não couber em nenhum bloco livre
     - [ ] best fit
 - [ ] libera mem
     - [ ] zerar memoria, colocar o nodo na lista de blocos livres e retirar da lista de blocos ocupados
