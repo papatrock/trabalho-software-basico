@@ -53,6 +53,7 @@ void iniciaAlocador()
  */
 void *alocaMem(int bytes){
 
+    //lista vazia
     if (blocosLivres->prox == NULL && blocosLivres->tam == 0) {
         size_t tam;
         
@@ -92,19 +93,46 @@ void *alocaMem(int bytes){
 
     //daqui pra baixo ta errado
     
-    nodo_t *nodo = blocosLivres;
-    while (nodo->prox != NULL)
-        nodo = nodo->prox;
+    nodo_t *tmp = blocosLivres;
+    while (tmp->prox != NULL)
+        tmp = tmp->prox;
     
-    nodo_t *novo_nodo = (nodo_t *)memoriaLivreBloco1;
-    memoriaLivreBloco1 += sizeof(nodo_t);
-    novo_nodo->status = 1;
-    novo_nodo->tam = bytes;
-    novo_nodo->endereco = (void *)((char *)nodo->endereco + nodo->tam); //TODO verificar esses endereços
+    nodo_t *novoNodo = bestFit(blocosLivres, bytes);
+    if(!novoNodo)
+        printf("nao encontrou um nodo\n");
+    size_t tam = novoNodo->tam - bytes;
+    novoNodo->status = 1;
+    novoNodo->tam = bytes;
+    blocosOcupados = insereNoFim(blocosOcupados,novoNodo);
+
+    //if(!novoNodo) -> cria um nodo novo no fim
+
+    //aloca memoria restante em um novo nodo
+    blocosLivres = novoNodo + sizeof(nodo_t);
+    blocosLivres->endereco = novoNodo->endereco + novoNodo->tam;
+    blocosLivres->prox = NULL;
+    blocosLivres->status = 0;
+    blocosLivres->tam = tam - novoNodo->tam;
+
     
-    nodo->prox = novo_nodo;
-    
-    return novo_nodo->endereco; 
+    return novoNodo->endereco; 
+}
+
+nodo_t *bestFit(nodo_t *inicio,size_t tam){
+    nodo_t *tmp = inicio;
+    nodo_t *bestFit = NULL;
+
+    while(tmp != NULL){
+        if(tmp->tam >= tam && (bestFit == NULL || tmp->tam < bestFit->tam)){
+            printf("AAAAAAAAAAAAAAAAA\n");
+            bestFit = tmp;
+        }
+        tmp = tmp->prox;
+    }
+
+            
+
+    return bestFit;
 }
 
 

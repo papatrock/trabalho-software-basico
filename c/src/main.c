@@ -7,11 +7,10 @@ int main(int argc, char **argv)
 {
     iniciaAlocador();
     void *a = alocaMem(100);
-    //void *b = alocaMem(200);
+    void *b = alocaMem(200);
     //printf("\n\n%p\n,addr:%p\nprox:%p\nstatus:%d\ntam:%d",blocosLivres,blocosLivres->endereco,blocosLivres->prox,blocosLivres->status,blocosLivres->tam);    
     //printf("\n\n");
     //printf("%p\n,addr:%p\nprox:%p\nstatus:%d\ntam:%d",blocosLivres->prox,blocosLivres->prox->endereco,blocosLivres->prox->prox,blocosLivres->prox->status,blocosLivres->prox->tam);    
-
 
     #ifdef _DEBUG_
     printf("blocos livres:\n");

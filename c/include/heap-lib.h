@@ -7,7 +7,10 @@
 
 void iniciaAlocador();
 
-
 void *alocaMem(int bytes);
 
-nodo_t *iniciaBloco(int tam,nodo_t *inicio);
+void finalizaAlocador();
+
+nodo_t *bestFit(nodo_t *inicio,size_t tam);
+
+int liberaMem(void *bloco);
