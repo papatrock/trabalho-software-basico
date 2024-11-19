@@ -42,36 +42,55 @@ para acomodá-lo.
 * best fit: percorre toda a lista e seleciona o nó com menor bloco, que é maior do que o solicitado; 
 * next fit: é first fit em uma lista circular. A busca começa onde a última parou.
 ### 6.4 implemente um procedimento que imprime um mapa da memória da região da heap em todos os algoritmos propostos aqui. Cada byte da parte gerencial do nó deve ser impresso com o caractere "#". O caractere usado para a impressão dos bytes do bloco de cada nó depende se o bloco estiver livre ou ocupado. Se estiver livre, imprime o caractere -". Se estiver ocupado, imprime o caractere "+".
-
-# Implementação em C
-
-## brk()
-
-```cpp=
-#include <unistd.h>
-
-int brk(void *addr); Sets the program break to the location specified by end_data_segment.
-```
-### Descrição
-Define o final do segmento de dados para o valor especificado por addr
-## sbrk()
-```cpp=
-#include <unistd.h>
+# Programa utilizado na avaliação
+## exemplo.c
+```cpp
 #include <stdio.h>
+#include "meuAlocador.h"
 
-int main(int argc, char *argv[]){
+int main (long int argc, char** argv) {
+  void *a, *b;
 
-    void *currentBreak = sbrk(0x5);
-    printf("First increment of 0x5: %p\n",currentBreak);
+  iniciaAlocador();               // Impressão esperada
+  imprimeMapa();                  // <vazio>
 
-    currentBreak = sbrk(0x5);
-    printf("Second increment of 0x5: %p\n",currentBreak);
+  a = (void *) alocaMem(10);
+  imprimeMapa();                  // ################**********
+  b = (void *) alocaMem(4);
+  imprimeMapa();                  // ################**********##############****
+  liberaMem(a);
+  imprimeMapa();                  // ################----------##############****
+  liberaMem(b);                   // ################----------------------------
+                                  // ou
+                                  // <vazio>
+  finalizaAlocador();
 }
 ```
-### Descrição
-sbrk() incrementa o espaço de dados do programa em bytes de incremento. Chamar sbrk() com paramtro 0 pode ser usado para encontrar a localização atual da interrupção do programa.
-#### Retorno:
-Retorna um ponteiro pro inicio da memória recem alocada (se o parametro for 0 retorna o program break anterior) ou void -1 em caso de erro
+## meuAlocador.h
+```cpp
+ // Protótipos (seção 6.1.2 e Projeto de Implementação 6.2)
+void iniciaAlocador();   // Executa syscall brk para obter o endereço do topo
+                         // corrente da heap e o armazena em uma
+                         // variável global, topoInicialHeap.
+void finalizaAlocador(); // Executa syscall brk para restaurar o valor
+                         // original da heap contido em topoInicialHeap.
+int liberaMem(void* bloco); // indica que o bloco está livre.
+void* alocaMem(int num_bytes) // 1. Procura um bloco livre com tamanho maior ou
+                              //    igual à num_bytes.
+                              // 2. Se encontrar, indica que o bloco está
+                              //    ocupado e retorna o endereço inicial do bloco;
+                              // 3. Se não encontrar, abre espaço
+                              //    para um novo bloco, indica que o bloco está
+                              //    ocupado e retorna o endereço inicial do bloco.
+void imprimeMapa();       // imprime um mapa da memória da região da heap.
+                          // Cada byte da parte gerencial do nó deve ser impresso
+                          // com o caractere "#". O caractere usado para
+                          // a impressão dos bytes do bloco de cada nó depende
+                          // se o bloco estiver livre ou ocupado. Se estiver livre, imprime o
+                          // caractere -". Se estiver ocupado, imprime o caractere "+".
+
+```
+
 
 # Links
 
