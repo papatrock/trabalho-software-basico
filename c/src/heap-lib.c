@@ -66,16 +66,30 @@ void *alocaMem(int bytes){
         return bloco->endereco;
     }
     
-    
+    size_t tamRestante;
     nodo_t *novoNodo = bestFit(bloco, bytes);
-    //se nao encontrar, cria um novo nodo
-    if(!novoNodo)
-        printf("nao encontrou um nodo\n");
+    //se nao encontrar, cria um novo nodo e insere no fim da lista
+    if(!novoNodo){
+        novoNodo = sbrk(sizeof(nodo_t));
+        size_t tam;
+        
+        // Calcula o tamanho (multiplo de 4096)
+        if (bytes <= 4096)
+            tam = 4096;
+        else
+            tam = ((bytes + 4096 - 1) / 4096) * 4096;
 
-    size_t tamRestante = novoNodo->tam - bytes; //memoria restante daquele bloco
-    novoNodo->status = 1;
-    novoNodo->tam = bytes;
-
+        novoNodo->endereco = sbrk(tam);
+        novoNodo->tam = bytes;
+        novoNodo->status = 1;
+        novoNodo->prox = NULL;
+        bloco = insereNoFim(bloco,novoNodo);
+        tamRestante = tam - bytes;
+    }else{
+        tamRestante = novoNodo->tam - bytes; //memoria restante daquele bloco
+        novoNodo->status = 1;
+        novoNodo->tam = bytes;
+    }
     //aloca memoria restante em um novo nodo
     if(tamRestante > 0){   
         nodo_t *memRestante = sbrk(sizeof(nodo_t));
