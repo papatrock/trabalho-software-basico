@@ -3,10 +3,7 @@
 #include <stdio.h>
 
 
-extern nodo_t *blocosLivres;
-extern nodo_t *blocosOcupados;
-void *memoriaLivreBloco1 = NULL;
-void *fimBloco1 = NULL;
+extern nodo_t *bloco;
 
 /*
 * Cria as estruturas de gerenciamento da heap
@@ -16,34 +13,12 @@ void *fimBloco1 = NULL;
 */
 void iniciaAlocador()
 {
-    size_t blocTam = sizeof(nodo_t);
-
-    void* bloco1 = sbrk(blocTam * TAM_BLOQ_CTRL);
-    if (bloco1 == (void*)-1) {
-        fprintf(stderr,"Erro de alocacao\n");
-        exit(EXIT_FAILURE);
-    }
-    memoriaLivreBloco1 = bloco1; 
-    fimBloco1 = bloco1 + blocTam * TAM_BLOQ_CTRL;
-
-
-    void* bloco2 = sbrk(blocTam * TAM_BLOQ_CTRL);
-    if (bloco2 == (void*)-1) {
-        fprintf(stderr,"Erro de alocacao\n");
-        exit(EXIT_FAILURE);
-    }
-
-    blocosLivres = (nodo_t*) bloco1;
-    blocosLivres->endereco = sbrk(0); //inicio da lista aponta para começo da
-    blocosLivres->prox = NULL;
-    blocosLivres->status = 0;
-    blocosLivres->tam = 0;
-
-    blocosOcupados = (nodo_t*) bloco2;
-    blocosOcupados->endereco = NULL;
-    blocosOcupados->prox = NULL;
-    blocosOcupados->status = 0;
-    blocosOcupados->tam = 0;
+    bloco = sbrk(sizeof(nodo_t));
+    bloco->endereco = sbrk(0); //inicio da lista aponta para começo da
+    bloco->prox = NULL;
+    bloco->status = 0;
+    bloco->tam = 0;
+    
 }
 
 /**
@@ -54,7 +29,7 @@ void iniciaAlocador()
 void *alocaMem(int bytes){
 
     //lista vazia
-    if (blocosLivres->prox == NULL && blocosLivres->tam == 0) {
+    if (bloco->prox == NULL && bloco->tam == 0) {
         size_t tam;
         
         // Calcula o tamanho (multiplo de 4096)
@@ -63,56 +38,61 @@ void *alocaMem(int bytes){
         else
             tam = ((bytes + 4096 - 1) / 4096) * 4096;
         
-        nodo_t *novoNodo = blocosLivres;
-
-
-        // Inicializa o novo nodo ocupado
-        novoNodo->endereco = sbrk(tam);
-        if (novoNodo->endereco == (void *)-1) {
+        
+        bloco->endereco = sbrk(tam);
+        if (bloco->endereco == (void *)-1) {
             // Erro ao alocar memória
             perror("Erro ao alocar memória com sbrk");
             return NULL;
         }
 
-        novoNodo->status = 1;
-        novoNodo->tam = bytes;
-        novoNodo->prox = NULL;
-
-        // Insere o novo nodo na lista de blocos ocupados
-        blocosOcupados = insereNoFim(blocosOcupados, novoNodo);
+        bloco->status = 1;
+        bloco->tam = bytes;
         
+        nodo_t *novoNodo = sbrk(sizeof(nodo_t));
+        if (novoNodo == (void *)-1) {
+            // Erro ao alocar memória
+            perror("Erro ao alocar memória com sbrk");
+            return NULL;
+        }
         // Cria o novo nodo livre com a memoria restante
-        blocosLivres = novoNodo + sizeof(nodo_t);
-        blocosLivres->endereco = novoNodo->endereco + novoNodo->tam;
-        blocosLivres->prox = NULL;
-        blocosLivres->status = 0;
-        blocosLivres->tam = tam - novoNodo->tam;
+        novoNodo->endereco = bloco->endereco + bloco->tam;
+        novoNodo->tam = tam - bloco->tam;
+        novoNodo->status = 0;
+        novoNodo->prox = NULL;
+        
+        bloco->prox = novoNodo;
 
-        return novoNodo->endereco;
+        return bloco->endereco;
     }
     
-    nodo_t *tmp = blocosLivres;
-    while (tmp->prox != NULL)
-        tmp = tmp->prox;
     
-    nodo_t *novoNodo = bestFit(blocosLivres, bytes);
+    nodo_t *novoNodo = bestFit(bloco, bytes);
+    //se nao encontrar, cria um novo nodo
     if(!novoNodo)
         printf("nao encontrou um nodo\n");
-    size_t tam = novoNodo->tam - bytes;
+
+    size_t tamRestante = novoNodo->tam - bytes; //memoria restante daquele bloco
     novoNodo->status = 1;
     novoNodo->tam = bytes;
-    blocosOcupados = insereNoFim(blocosOcupados,novoNodo);
-
-    //if(!novoNodo) -> cria um nodo novo no fim
 
     //aloca memoria restante em um novo nodo
-    blocosLivres = novoNodo + sizeof(nodo_t);
-    blocosLivres->endereco = novoNodo->endereco + novoNodo->tam;
-    blocosLivres->prox = NULL;
-    blocosLivres->status = 0;
-    blocosLivres->tam = tam - novoNodo->tam;
+    if(tamRestante > 0){   
+        nodo_t *memRestante = sbrk(sizeof(nodo_t));
+        if (novoNodo == (void *)-1) {
+            // Erro ao alocar memória
+            perror("Erro ao alocar memória com sbrk");
+            return NULL;
+        }
+        // Cria o novo nodo livre com a memoria restante
+        memRestante->endereco = novoNodo + novoNodo->tam;
+        memRestante->tam = tamRestante;
+        memRestante->status = 0;
+        memRestante->prox = novoNodo->prox;
 
-    
+        novoNodo->prox = memRestante;
+    }
+
     return novoNodo->endereco; 
 }
 
@@ -121,7 +101,7 @@ nodo_t *bestFit(nodo_t *inicio,size_t tam){
     nodo_t *bestFit = NULL;
 
     while(tmp != NULL){
-        if(tmp->tam >= tam && (bestFit == NULL || tmp->tam < bestFit->tam))
+        if((tmp->tam >= tam && tmp->status == 0) && (bestFit == NULL || tmp->tam < bestFit->tam))
             bestFit = tmp;
         
         tmp = tmp->prox;

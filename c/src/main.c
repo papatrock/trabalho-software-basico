@@ -1,7 +1,6 @@
 #include "../include/main.h"
 
-nodo_t *blocosLivres;
-nodo_t *blocosOcupados;
+nodo_t *bloco; //variavel global que aponta para o começo do bloco a ser alocado 
 
 int main(int argc, char **argv)
 {
@@ -13,11 +12,9 @@ int main(int argc, char **argv)
     //printf("%p\n,addr:%p\nprox:%p\nstatus:%d\ntam:%d",blocosLivres->prox,blocosLivres->prox->endereco,blocosLivres->prox->prox,blocosLivres->prox->status,blocosLivres->prox->tam);    
 
     #ifdef _DEBUG_
-    printf("blocos livres:\n");
-    printLista(blocosLivres);
+    printf("blocos alocado:\n");
+    printLista(bloco);
     printf("------------------\n");
-    printf("\nblocos ocupados:\n");
-    printLista(blocosOcupados);
     #endif
     strcpy (a, "Preenchimento de Vetor");
     printf("a:%s\n addr:%p\n",(char*)a,a);

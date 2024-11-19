@@ -9,7 +9,7 @@ void printLista(nodo_t *inicio){
     nodo_t *tmp = inicio;
     
     while (tmp != NULL) {
-        printf("Ponteiro:%p\nEndereco: %p, Status: %d, Tam: %d\n",tmp,tmp->endereco, tmp->status, tmp->tam);
+        printf("Ponteiro:%p\nEndereco: %p, Status: %d, Tam: %d,Prox:%p\n",tmp,tmp->endereco, tmp->status, tmp->tam, tmp->prox);
         tmp = tmp->prox;
     }
 }
