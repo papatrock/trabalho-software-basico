@@ -22,10 +22,16 @@ int main(int argc, char **argv)
     printf("a:%s\n addr:%p\n",(char*)a,a);
     //strcpy(b, a);
     //printf("a:%s addr:%p\nb:%s addr:%p\n",(char*)a,a,(char*)b,b);
-    /*
+    
     liberaMem(a);
     liberaMem(b);
-
+    
+    #ifdef _DEBUG_
+    printf("blocos alocados após libera mem:\n");
+    printLista(bloco);
+    printf("------------------\n");
+    #endif
+    /*
     a = alocaMem(50);
     liberaMem(a);
     */

@@ -120,9 +120,6 @@ nodo_t *bestFit(nodo_t *inicio,size_t tam){
         
         tmp = tmp->prox;
     }
-
-            
-
     return bestFit;
 }
 
@@ -141,15 +138,20 @@ void finalizaAlocador(){
  *O parâmetro bloco é o ende-reço retornado por alocaMem->
  *
  * */
-int liberaMem(void *bloco){
-    nodo_t *nodo;
+void liberaMem(void *endereco){
+    nodo_t *nodo = bloco;
 
-    //nodo = procuraNodo(bloco);
-    if(!nodo)
-        return 0;
-    
+    while(nodo->endereco != endereco && nodo != NULL){
+        //nodo_t *anterior = nodo;
+        nodo = nodo->prox;
+    }
 
-    return 1;
+    if(!nodo){
+        printf("erro ao liberar memoria\n");
+        return;
+    }
+    //zera memoria
+    nodo->status = 0;
 }
 
 

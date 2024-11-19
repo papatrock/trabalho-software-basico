@@ -13,4 +13,4 @@ void finalizaAlocador();
 
 nodo_t *bestFit(nodo_t *inicio,size_t tam);
 
-int liberaMem(void *bloco);
+void liberaMem(void *bloco);
