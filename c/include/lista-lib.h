@@ -14,8 +14,6 @@ void printLista(nodo_t *inicio);
 
 nodo_t* insereNoFim(nodo_t *inicio, nodo_t *nodo);
 
-int insereNaPosicao(nodo_t *inicio,void* endereco, nodo_t *nodo);
-
 nodo_t* removeNodo(nodo_t *inicio, nodo_t *nodo);
 
 int comparaNodo(nodo_t *nodo1, nodo_t *nodo2);

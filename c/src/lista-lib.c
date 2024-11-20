@@ -37,11 +37,6 @@ nodo_t* insereNoFim(nodo_t *inicio, nodo_t *nodo){
     return inicio;
 }
 
-int insereNaPosicao(nodo_t *inicio,void* endereco, nodo_t *nodo){
-
-    return 1;
-}
-
 /*
 * Não remover nodo de uma lista sem antes alocar na outra
 * para nao ter leaks (sdds free())

@@ -1,9 +1,9 @@
 #include "../include/heap-lib.h"
-#include <unistd.h>
-#include <stdio.h>
 
 
-extern nodo_t *bloco;
+
+nodo_t *bloco;
+void *brk_original;
 
 /*
 * Cria as estruturas de gerenciamento da heap
@@ -13,6 +13,7 @@ extern nodo_t *bloco;
 */
 void iniciaAlocador()
 {
+    brk_original = sbrk(0);
     bloco = sbrk(sizeof(nodo_t));
     bloco->endereco = sbrk(0); //inicio da lista aponta para começo da
     bloco->prox = NULL;
@@ -123,36 +124,71 @@ nodo_t *bestFit(nodo_t *inicio,size_t tam){
     return bestFit;
 }
 
-
-/*
- *Libera as estruturas criadas por iniciaAlocador()
- * 
- */
-void finalizaAlocador(){
-
-}
-
-
 /*
  *Devolve para a heap o bloco que foi alocado por alocaMem->
  *O parâmetro bloco é o ende-reço retornado por alocaMem->
  *
  * */
 void liberaMem(void *endereco){
+    if (!endereco) {
+        printf("Erro: endereço inválido.\n");
+        return;
+    }
+
     nodo_t *nodo = bloco;
 
-    while(nodo->endereco != endereco && nodo != NULL){
+    while(nodo != NULL && nodo->endereco != endereco){
         //nodo_t *anterior = nodo;
         nodo = nodo->prox;
     }
 
     if(!nodo){
-        printf("erro ao liberar memoria\n");
+        printf("Erro: endereço não encontrado na lista\n");
         return;
     }
     //zera memoria
+    memset(nodo->endereco, 0, nodo->tam); // sera q precisa?
     nodo->status = 0;
+    endereco = NULL;
+    printf("Memoria liberada com sucesso\n");
 }
 
 
+/*
+ *Libera as estruturas criadas por iniciaAlocador()
+ * 
+ */
+void finalizaAlocador() {
+    #ifdef _DEBUG_
+    printf("brk antes de finalizaAlocador: %p\n", sbrk(0));
+    #endif
 
+    brk(brk_original);
+
+    #ifdef _DEBUG_
+    // temq usar fprinf porq o buffer do printf foi de base dps de restaurar brk
+    fprintf(stderr,"brk depois de finalizaAlocador: %p\n", sbrk(0));
+    #endif
+}
+
+void imprimeMapa() {
+    nodo_t *nodo = bloco;  
+
+    while (nodo != NULL) {
+        
+        for (int i = 0; i < sizeof(nodo_t); i++) {
+            printf("#");  
+        }
+        
+        for (int i = 0; i < nodo->tam; i++) {
+            if (nodo->status == 0) {
+                printf(".");  
+            } else {
+                printf("+"); 
+            }
+        }
+
+        printf("\n");
+        nodo = nodo->prox;  
+    }
+}
