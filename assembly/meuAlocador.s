@@ -34,8 +34,3 @@ ajusta_brk:
     popq %rbp
     ret
     
-start:
-    movq %rax, %rbx
-    movq $60, %rax
-    movq %rbx, %rdi
-    syscall 
