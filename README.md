@@ -1,4 +1,4 @@
-# Todo
+# Todo assembly
 - [ ] inicia alocador
 - [ ] Aloca mem
     - [x] primeira alocação
@@ -9,9 +9,6 @@
     - [ ] zerar memoria, colocar o nodo na lista de blocos livres e retirar da lista de blocos ocupados
     - [ ] ao liberar memoria verificar se blocos adjacentes estão livres, se sim fazer a fusão
 - [ ] Finaliza alocador
-- [ ] Funções auxiliares
-    - [ ] insere na posição x
-    - [ ] limpa nodo
 
 # Enunciado
 Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
