@@ -25,11 +25,11 @@ ajusta_brk:
     movq %rsp, %rbp
 
     call brk_atual           # Obter o valor atual do break em %rax
-    movq 16(%rbp), %rcx      # pramatro, tamanho do deslocamento(16(%rbp))
-    addq %rcx, %rax          # Soma o deslocamento ao valor atual do break
+    addq 16(%rbp), %rax      # Soma o deslocamento ao valor atual do break
     movq %rax, %rdi          # Prepara o novo valor para ajustar o break
     movq $12, %rax           # Syscall 'brk'
     syscall                  # Ajusta o break
+    addq 16(%rbp),$brk_atual # ajusta var global TODO talvez chamar brk_atual pra garantir?
 
     popq %rbp
     ret

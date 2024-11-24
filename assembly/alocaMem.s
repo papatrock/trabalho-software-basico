@@ -8,10 +8,17 @@ alocamMem:
     movq 8($brk_original), %rbx # Se tamanho do primeiro bloco = 0 -> lista vazia
     cmp %rbx, %rax
     je lista_vazia
-    # --- lista não vazia, procura nodo ------
+    # --- lista não vazia, procura bloco ------
     movq 16(%rbp), %rax
     push %rax
-    call bestFit
+    call bestFit        # rax = retorno do bestFit
+    cmp $0, %rax        # rax = 0 não achou bloco, cria outro no fim
+    je alocaNovoBloco
+
+alocaNovoBloco:
+
+
+
 
 # bestFit(tam) 
 # tam = 16(%rbp)
@@ -39,7 +46,6 @@ bestFit:
         jmp fim_cond
         true:
             movq %rax,-16(%rbp)
-            jmp fim_cond
 
         fim_cond:
             movq -8(%rbp), %rbx
@@ -56,25 +62,26 @@ bestFit:
 
 
 lista_vazia:
-    cmp $4096,16(%rbp)
-    jg else # if(bytes > 4096) jump else
-    movq $4096,-8(%rbp) # tam = 4096
-    jmp seta_status
-# ------- calcula tam -----------
-    else: # Calcula multiplo de 4096
-        movq 16(%rbp), %rax    # rax = bytes
-        addq $4096, %rax       # Soma 4096
-        subq $1, %rax          # Subtrai 1
-        xorq %rdx, %rdx        # Limpa %rdx para evitar erros no divq
-        movq $4096, %rbx       # Divisor
-        divq %rbx              # Divide %rax por 4096 (resultado em %rax)
-        imulq $4096, %rax      # Multiplica o quociente por 4096
-        movq %rax, -8(%rbp)    # Armazena o múltiplo em -8(%rbp) (tam)
-        jmp seta_status
-    # -------- fim calcula tam -------
-    seta_status:
+        movq $16, %rax
+        push %rax
+        call ajusta_brk         # soma header ao brk
+
+        subq $8, %rsp           # espaço para tam
+        pushq 16(%rbp)
+        call calculaTam
+        movq %rax,-8(%rbp)      # -8 rbp = tam calculado
+        pushq -8(%rbp)          # empilha tam
+        call ajusta_brk         
+
         movq $1,0($brk_original) # status = 0
         movq 16(%rbp), 8($brk_original) # bloco.tam = bytes
+
+        movq -8(%rbp), %rbx     # rbx = tam
+        subq 16(%rbp), %rbx     # rbx = rbx - tam (tam - bytes)
+
+        # -- verifica se sobrou espaço no bloco
+        cmp $0,%rbx
+        je retorna_endereco
     # ------ calcula tam restante
         movq -8(%rbp), %rbx
         subq 16(%rbp), %rbx # rbx = tam - bytes
@@ -85,15 +92,33 @@ lista_vazia:
     aloca_mem_restante:
         movq $brk_original, %rax
         add $16, %rax            # tamanho do header
-        add 8(%brk_original), %rax
+        add 8(%brk_original), %rax # rax = end + tam
+
         movq $0, 0(%rax)        # seta status do novo bloco
         movq %rbx, 8(%rax)      # seta o tamanho do novo bloco
-        jmp retorna_endereco
-
     retorna_endereco:
         movq $brk_original, %rax
         addq $16, %rax # endereço do inicio do bloco
         popq %rbp
         ret
 
+calculaTam:
+    pushq %rbp
+    movq %rsp, %rbp
 
+    cmp $4096,16(%rbp)
+    jg else # if(bytes > 4096) jump else
+    movq $4096,%rax # tam = 4096
+    popq %rbp
+    ret
+    else: # Calcula multiplo de 4096
+        movq 16(%rbp), %rax    # rax = bytes
+        addq $4096, %rax       # Soma 4096
+        subq $1, %rax          # Subtrai 1
+        xorq %rdx, %rdx        # Limpa %rdx para evitar erros no divq
+        movq $4096, %rbx       # Divisor
+        divq %rbx              # Divide %rax por 4096 (resultado em %rax)
+        imulq $4096, %rax      # Multiplica o quociente por 4096
+        
+        popq %rbp
+        ret                    # retorna tam calculado em %rax
