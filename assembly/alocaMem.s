@@ -4,21 +4,83 @@
 alocamMem:
     pushq %rbp
     movq %rsp, %rbp
+
     movq $0, %rax
     movq 8($brk_original), %rbx # Se tamanho do primeiro bloco = 0 -> lista vazia
-    cmp %rbx, %rax
+    cmp $0, 8($brk_original)
     je lista_vazia
     # --- lista não vazia, procura bloco ------
-    movq 16(%rbp), %rax
-    push %rax
+    pushq 16(%rbp)
     call bestFit        # rax = retorno do bestFit
     cmp $0, %rax        # rax = 0 não achou bloco, cria outro no fim
-    je alocaNovoBloco
+    je if_bestFit_0
+    # --- acho um bloco ----
+    movq $1,0(%rax)     # seta status
+    movq 8(%rax), %rbx  # rbx = tam
+    movq 16(%rbp), 8(%rax) # seta tam
 
+    # ---verifica se sobrou espaço no bloco -----
+    subq 16(%rbp),%rbx  # rbx = tam - bytes
+    cmp $0, %rbx
+    je semMemRestante
+    subq $8,%rsp
+    movq %rax, -8(%rbp)  # endereço do bloco escolhido
+    add $16,%rax            # soma o header
+    add 16(%rbp), %rax      # soma o tamanho
+    movq $0, 0(%rax)        # seta status
+    movq %rbx, 8(%rax)      # seta o tamanho
+    movq -8(%rbp), %rax
+    addq $8, %rsp           # retorna mem
+    semMemRestante:
+        addq $16, %rax          # rax = end de dados
+
+        popq %rbp
+        ret
+
+    if_bestFit_0:
+        pushq $brk_atual
+        pushq 16(%rbp)
+        call alocaNovoBloco
+        subq $16, %rsp
+        popq %rbp
+        ret
+
+
+# alocaNovoBloco(end, tam)
 alocaNovoBloco:
+    movq $16,%rax
+    pushq %rax
+    call ajusta_brk     # sbrk(16)
+    popq %rbp
+    call brk_atual
+    subq $8, %rsp      # tam
+    pushq 16(%rbp)      # empilha bytes
+    call calculaTam
+    popq %rbp
+    movq %rax, -8(%rbp)  # tam = multiplo de 4096
 
+    pushq -8(%rbp)
+    call ajusta_brk     # sbrk(tam)
+    popq %rbp
+    
+    movq 16(%rbp), %rbx
+    movq $1,0(%rbx)     # seta status
+    movq -8(%rbp),8(%rbx)    # seta tam
+    # --- verifica se sobrou memoria no bloco ------
+    subq 8(%rbp), %rbx  # rbx = tam - bytes
+    cmp $0, %rbx
+    je semMemRestante
+    movq 16(%rbp), %rax
+    add $16, %rax  
+    add -8(%rbp), %rax      # rax = end da mem restante
+    movq $0,0(%rax)         # seta status
+    movq %rbx,8(%rax)       # seta o tamamnho
+semMemRestante:
+    movq 16(%rbp), %rax     # rax = end
+    addq $16, %rax          # rax = end de dados
 
-
+    popq %rbp
+    ret
 
 # bestFit(tam) 
 # tam = 16(%rbp)
@@ -62,43 +124,9 @@ bestFit:
 
 
 lista_vazia:
-        movq $16, %rax
-        push %rax
-        call ajusta_brk         # soma header ao brk
-
-        subq $8, %rsp           # espaço para tam
+        pushq $brk_original
         pushq 16(%rbp)
-        call calculaTam
-        movq %rax,-8(%rbp)      # -8 rbp = tam calculado
-        pushq -8(%rbp)          # empilha tam
-        call ajusta_brk         
-
-        movq $1,0($brk_original) # status = 0
-        movq 16(%rbp), 8($brk_original) # bloco.tam = bytes
-
-        movq -8(%rbp), %rbx     # rbx = tam
-        subq 16(%rbp), %rbx     # rbx = rbx - tam (tam - bytes)
-
-        # -- verifica se sobrou espaço no bloco
-        cmp $0,%rbx
-        je retorna_endereco
-    # ------ calcula tam restante
-        movq -8(%rbp), %rbx
-        subq 16(%rbp), %rbx # rbx = tam - bytes
-        cmp $0, rbx
-        jg aloca_mem_restante # TODO criar novo bloco
-        jmp retorna_endereco
-
-    aloca_mem_restante:
-        movq $brk_original, %rax
-        add $16, %rax            # tamanho do header
-        add 8(%brk_original), %rax # rax = end + tam
-
-        movq $0, 0(%rax)        # seta status do novo bloco
-        movq %rbx, 8(%rax)      # seta o tamanho do novo bloco
-    retorna_endereco:
-        movq $brk_original, %rax
-        addq $16, %rax # endereço do inicio do bloco
+        call alocaNovoBloco # rax = end do novo bloco
         popq %rbp
         ret
 
