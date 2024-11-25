@@ -5,16 +5,15 @@ alocamMem:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq $0, %rax
-    movq 8($brk_original), %rbx # Se tamanho do primeiro bloco = 0 -> lista vazia
     cmp $0, 8($brk_original)
     je lista_vazia
     # --- lista não vazia, procura bloco ------
     pushq 16(%rbp)
     call bestFit        # rax = retorno do bestFit
+    addq $8, %rsp
     cmp $0, %rax        # rax = 0 não achou bloco, cria outro no fim
     je if_bestFit_0
-    # --- acho um bloco ----
+    # --- achou um bloco ----
     movq $1,0(%rax)     # seta status
     movq 8(%rax), %rbx  # rbx = tam
     movq 16(%rbp), 8(%rax) # seta tam
@@ -28,6 +27,7 @@ alocamMem:
     add $16,%rax            # soma o header
     add 16(%rbp), %rax      # soma o tamanho
     movq $0, 0(%rax)        # seta status
+    subq $16, %rbx          # tam = tam - header
     movq %rbx, 8(%rax)      # seta o tamanho
     movq -8(%rbp), %rax
     addq $8, %rsp           # retorna mem
@@ -46,38 +46,47 @@ alocamMem:
         ret
 
 
-# alocaNovoBloco(end, tam)
+# alocaNovoBloco(bytes) aloca novo bloco ao fim do bloco alocado
 alocaNovoBloco:
+    subq $8, %rsp       # espaco para end
+    movq $brk_atual, -8(%rsp) # end
     movq $16,%rax
     pushq %rax
     call ajusta_brk     # sbrk(16)
-    popq %rbp
-    call brk_atual
-    subq $8, %rsp      # tam
+    addq $8, %rsp
+    
     pushq 16(%rbp)      # empilha bytes
     call calculaTam
-    popq %rbp
-    movq %rax, -8(%rbp)  # tam = multiplo de 4096
-
-    pushq -8(%rbp)
-    call ajusta_brk     # sbrk(tam)
-    popq %rbp
     
-    movq 16(%rbp), %rbx
+    subq $8, %rsp       # espaco para tam
+    movq %rax, -16(%rbp)  # tam = multiplo de 4096
+
+    pushq -16(%rbp)
+    call ajusta_brk     # sbrk(tam)
+    addq $8, %rsp
+
+    movq -8(%rbp), %rbx 
     movq $1,0(%rbx)     # seta status
-    movq -8(%rbp),8(%rbx)    # seta tam
+    movq 16(%rbp),8(%rbx)    # seta tam
+    
     # --- verifica se sobrou memoria no bloco ------
+    movq -16(%rbp), %rbx  # rbx = tam
     subq 8(%rbp), %rbx  # rbx = tam - bytes
     cmp $0, %rbx
     je semMemRestante
-    movq 16(%rbp), %rax
+
+    movq -8(%rbp), %rax
     add $16, %rax  
-    add -8(%rbp), %rax      # rax = end da mem restante
+    add 8(%rbp), %rax      # rax = end da mem restante
     movq $0,0(%rax)         # seta status
+    subq $16, %rbx          # header tam restantes - header
     movq %rbx,8(%rax)       # seta o tamamnho
 semMemRestante:
-    movq 16(%rbp), %rax     # rax = end
+    movq -8(%rbp), %rax     # rax = end
     addq $16, %rax          # rax = end de dados
+
+    # limpa pilha
+    addq $16, %rsp
 
     popq %rbp
     ret
@@ -100,11 +109,15 @@ bestFit:
         movq -8(%rbp), %rax           # rax = tmp.status
         cmpq $0, 0(%rax)          # Compara tmp.status com 0
         jne fim_cond
+        movq -8(%rbp), %rbx
+        movq 8(%rbx), %rbx          # rbx = nodo.tam
+        cmp 16(rbp),%rbx
+        jl fim_cond
         cmp $0, -16(%rbp)           # se bestFit == 0, é o primeiro bloco com espaço, logo bestFit = bloco
         je true
         movq -16(%rbp), %rbx        # rbx = bestFit atual
         cmp  8(%rbx),8(%rax)
-        jg true
+        jl true
         jmp fim_cond
         true:
             movq %rax,-16(%rbp)
@@ -124,11 +137,31 @@ bestFit:
 
 
 lista_vazia:
-        pushq $brk_original
-        pushq 16(%rbp)
-        call alocaNovoBloco # rax = end do novo bloco
-        popq %rbp
-        ret
+        pushq 16(%rbp)  # bytes
+        calculaTam      #  rax = tam
+        popq %rbx       # rbx = bytes
+        pushq %rax 
+        ajusta_brk      # seta o brk para tbm
+        popq %rax
+
+        movq $1,0($brk_original)  # seta status
+        movq %rbx,8($brk_original) # seta tamamnho
+        
+        # verifica se sobrou espaco
+
+        subq %rbx, %rax  # rax = tam - bytes
+        cmp $0, %rax
+        je semMemR
+        movq $brk_original,%rbx
+        add $16,%rbx
+        addq 8($brk_original), %rbx
+        movq $0,(%rbx)
+        subq $16, %rax      # tam restante - header
+        movq %rax,8(%rbx)
+        semMemR:
+            movq $brk_original, %rax     # rax = end
+            addq $16, %rax          # rax = end de dados
+            ret
 
 calculaTam:
     pushq %rbp
