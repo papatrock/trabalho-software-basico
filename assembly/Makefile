@@ -1,15 +1,31 @@
-OBJECTS = main.o meuAlocador.o
+CC = gcc              # Compilador C
+AS = as               # Assembler
+LD = ld               # Linker
 
-all: main
+CFLAGS = -Wall -O2    # Flags para o compilador C
+ASFLAGS =             # Flags para o assembler
+LDFLAGS =             # Flags para o linker
 
+OBJECTS = exemplo.o main.o meuAlocador.o
+
+all: main             # Alvo principal
+
+# Compila exemplo.c
+exemplo.o: exemplo.c meuAlocador.h
+	$(CC) $(CFLAGS) -c exemplo.c -o exemplo.o
+
+# Compila main.s
 main.o: main.s
-	as -o main.o main.s
+	$(AS) $(ASFLAGS) -o main.o main.s
 
-meuAlocador.o: meuAlocador.s
-	as -o meuAlocador.o meuAlocador.s
+# Compila meuAlocador.s
+meuAlocador.o: meuAlocador.s meuAlocador.h
+	$(AS) $(ASFLAGS) -o meuAlocador.o meuAlocador.s
 
+# Faz o link de tudo para gerar o executável
 main: $(OBJECTS)
-	ld -o main $(OBJECTS)
+	$(CC) $(LDFLAGS) -o main $(OBJECTS)
 
+# Limpa os arquivos gerados
 clean:
 	rm -f $(OBJECTS) main
