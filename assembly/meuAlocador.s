@@ -6,6 +6,7 @@
     
 .globl ret_brk_atual,ajusta_brk,iniciaAlocador,alocaMem
 
+
 # Retorna o valor do brk atual em rax
 ret_brk_atual:                            
     pushq %rbp
@@ -23,8 +24,11 @@ ajusta_brk:
     pushq %rbp
     movq %rsp, %rbp
 
+    movq 16(%rbp), %rdx 
     call ret_brk_atual           # Obter o valor atual do break em %rax
-    addq 16(%rbp), %rax      # Soma o deslocamento ao valor atual do break
+    addq %rdx, %rax              # Soma o deslocamento ao valor atual do break
+    
+    
     movq %rax, %rdi          # Prepara o novo valor para ajustar o break
     movq $12, %rax           # Syscall 'brk'
     syscall                  # Ajusta o break
@@ -50,17 +54,16 @@ movq %rsp, %rbp
     call ajusta_brk
     subq $8, %rsp
 
-    movq %rcx,%r11
-    addq $16,%r11
-    movq %r11, brk_atual    
-    
-    # configurar nodo 
-    # rcx = inicio do header
-    # aloca status 
-    movq $0,(%rcx)
+    # configurar nodo no novo espaço alocado
+    lea brk_original(%rip), %rbx    # rbx = endereço de brk_original
+    movq (%rbx), %rcx               # rcx = brk_original (valor atual da heap, início do header)
+    movq $0, (%rcx)                 # status = 0
+    movq $0, 8(%rcx)                # tamanho = 0
 
-    # aloca tamanho
-    movq $0,8(%rcx)
+    # Atualizar brk_atual para o final do header
+    addq $16, %rcx                  # brk_atual = brk_original + tamanho do header
+    lea brk_atual(%rip), %rbx       # rbx = endereço de brk_atual
+    movq %rcx, (%rbx)               # atualiza brk_atual com o novo valor
 
 popq %rbp
 ret
