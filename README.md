@@ -1,5 +1,5 @@
 # Todo assembly
-- [ ] inicia alocador
+- [x] inicia alocador
 - [ ] Aloca mem
     - [x] primeira alocação
     - [ ] n alocações
