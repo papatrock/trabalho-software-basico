@@ -1,15 +1,13 @@
 .section .data
-
-.section .bss
-    .global brk_original
-    .global brk_atual
+    brk_atual: .quad 0
+    brk_original: .quad 0
 
 .section .text
     
-.globl  _start
+.globl ret_brk_atual,ajusta_brk,iniciaAlocador,alocaMem
 
 # Retorna o valor do brk atual em rax
-brk_atual:                            
+ret_brk_atual:                            
     pushq %rbp
     movq %rsp, %rbp
 
@@ -20,16 +18,19 @@ brk_atual:
     popq %rbp
     ret
 
+# sbrk(n)
 ajusta_brk:
     pushq %rbp
     movq %rsp, %rbp
 
-    call brk_atual           # Obter o valor atual do break em %rax
+    call ret_brk_atual           # Obter o valor atual do break em %rax
     addq 16(%rbp), %rax      # Soma o deslocamento ao valor atual do break
     movq %rax, %rdi          # Prepara o novo valor para ajustar o break
     movq $12, %rax           # Syscall 'brk'
     syscall                  # Ajusta o break
-    addq 16(%rbp),$brk_atual # ajusta var global TODO talvez chamar brk_atual pra garantir?
+
+    lea brk_atual(%rip), %rbx # endereço de brk)atual em rbx
+    movq %rax, (%rbx)         # novo valor do brk em brk_atual
 
     popq %rbp
     ret
@@ -38,36 +39,28 @@ iniciaAlocador:
 pushq %rbp 
 movq %rsp, %rbp 
 
-    #salvar endereço inicial da heap em brk_original
-    movq $0, %rdi
-    movq %rax, 12
-    syscall
-    lea brk_original(%rip), %rcx        #pega o endereço na memória de brk_original e salva em %rcx
-    movq %rax, (%rcx)       #armazena o valor de %rax no endereço de memória de brk_original
+     # salvar endereço inicial da heap em brk_original
+    call ret_brk_atual
+    lea brk_original(%rip), %rcx # rcx = end. brk_original (var)
+    movq %rax, (%rcx)            # rcx = brk_original (val)
 
-    #alocar espaço para o nodo 
-    movq $0, %rdi
-    movq %rax, 12
-    syscall
-    movq [bloco], %rax  #salva o endereço do bloco 
+    # alocar espaço para o header
+    movq $16, %rax
+    pushq %rax
+    call ajusta_brk
+    subq $8, %rsp
 
-    #configurar nodo 
-    movq $0, %rdi
-    movq %rax, 12
-    syscall
-    movq %rbx, [bloco]      #carrega o endereço do bloco
-    movq (%rbx), %ax        #carrega o endereço do topo da heap em bloco->endereço
+    movq %rcx,%r11
+    addq $16,%r11
+    movq %r11, brk_atual    
+    
+    # configurar nodo 
+    # rcx = inicio do header
+    # aloca status 
+    movq $0,(%rcx)
 
-    #aloca status 
-    movq (%rbx)+8, $0
-
-    #aloca tamanho
-    movq (%rbx)+16, $0
-
-    #aloca próximo bloco 
-    movq %rcx, (%rbx)+16 #%rcx recebe o tamanho
-    addq %rcx, (%rbx)+16 #soma o tamanho ao endereço de memória 
-    movq (%rcx), $0 #endereço de memória do inicio do próximo bloco     
+    # aloca tamanho
+    movq $0,8(%rcx)
 
 popq %rbp
 ret
@@ -76,27 +69,28 @@ ret
 # alocaMem(int bytes)
 # bytes =16(%rbp) --> parametro passado por valor
 
-alocamMem:
+alocaMem:
     pushq %rbp
     movq %rsp, %rbp
-
-    cmp $0, 8($brk_original)
+    lea brk_original(%rip), %rcx
+    cmpq $0,8(%rcx)
     je lista_vazia
     # --- lista não vazia, procura bloco ------
     pushq 16(%rbp)
     call bestFit        # rax = retorno do bestFit
     addq $8, %rsp
-    cmp $0, %rax        # rax = 0 não achou bloco, cria outro no fim
+    cmpq $0, %rax        # rax = 0 não achou bloco, cria outro no fim
     je if_bestFit_0
     # --- achou um bloco ----
     movq $1,0(%rax)     # seta status
     movq 8(%rax), %rbx  # rbx = tam
-    movq 16(%rbp), 8(%rax) # seta tam
+    movq 16(%rbp),%r11
+    movq %r11, 8(%rax) # seta tam
 
     # ---verifica se sobrou espaço no bloco -----
     subq 16(%rbp),%rbx  # rbx = tam - bytes
-    cmp $0, %rbx
-    je semMemRestante
+    cmpq $0, %rbx
+    je sem_mem_restante
     subq $8,%rsp
     movq %rax, -8(%rbp)  # endereço do bloco escolhido
     add $16,%rax            # soma o header
@@ -106,25 +100,26 @@ alocamMem:
     movq %rbx, 8(%rax)      # seta o tamanho
     movq -8(%rbp), %rax
     addq $8, %rsp           # retorna mem
-    semMemRestante:
+    jmp fim_aloca_mem
+    sem_mem_restante:
         addq $16, %rax          # rax = end de dados
-
-        popq %rbp
-        ret
+        jmp fim_aloca_mem
 
     if_bestFit_0:
-        pushq $brk_atual
+        movq brk_atual, %rcx
+        pushq %rcx
         pushq 16(%rbp)
         call alocaNovoBloco
         subq $16, %rsp
+    fim_aloca_mem:
         popq %rbp
         ret
 
-
 # alocaNovoBloco(bytes) aloca novo bloco ao fim do bloco alocado
 alocaNovoBloco:
-    subq $8, %rsp       # espaco para end
-    movq $brk_atual, -8(%rsp) # end
+    lea brk_atual(%rip), %rax  # Carrega o endereço de brk_atual em %rax
+    movq %rax, -8(%rsp)        # Move o endereço de brk_atual para a pilha
+
     movq $16,%rax
     pushq %rax
     call ajusta_brk     # sbrk(16)
@@ -142,12 +137,13 @@ alocaNovoBloco:
 
     movq -8(%rbp), %rbx 
     movq $1,0(%rbx)     # seta status
-    movq 16(%rbp),8(%rbx)    # seta tam
+    movq 16(%rbp),%r11
+    movq %r11,8(%rbx)    # seta tam
     
     # --- verifica se sobrou memoria no bloco ------
     movq -16(%rbp), %rbx  # rbx = tam
     subq 8(%rbp), %rbx  # rbx = tam - bytes
-    cmp $0, %rbx
+    cmpq $0, %rbx
     je semMemRestante
 
     movq -8(%rbp), %rax
@@ -172,26 +168,28 @@ bestFit:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq 16(%rbp), rbx           # rbx = tam
+    movq 16(%rbp), %rbx           # rbx = tam
     sub $16,%rsp                 # aloca espaço para 2 long int
-    movq $brk_original, -8(%rbp) # tmp = inicio - tmp = -8(%rbp)
+    lea brk_original(%rip), %rcx
+    movq %rcx, -8(%rbp) # tmp = inicio - tmp = -8(%rbp)
     movq $0, -16(%rbp)           # bestFit = -16(%rbp)  0 == NULL
-
+    lea brk_atual(%rip), %r12
     # --- percorre os blocos -----
     while:
-        cmp $brk_atual,-8(%rbp)     # se endereço do tmp >= brk sai do while
+        cmpq %r12,-8(%rbp)     # se endereço do tmp >= brk sai do while
         jge fim_while
         movq -8(%rbp), %rax           # rax = tmp.status
         cmpq $0, 0(%rax)          # Compara tmp.status com 0
         jne fim_cond
         movq -8(%rbp), %rbx
         movq 8(%rbx), %rbx          # rbx = nodo.tam
-        cmp 16(rbp),%rbx
+        cmpq 16(%rbp),%rbx
         jl fim_cond
-        cmp $0, -16(%rbp)           # se bestFit == 0, é o primeiro bloco com espaço, logo bestFit = bloco
+        cmpq $0, -16(%rbp)           # se bestFit == 0, é o primeiro bloco com espaço, logo bestFit = bloco
         je true
         movq -16(%rbp), %rbx        # rbx = bestFit atual
-        cmp  8(%rbx),8(%rax)
+        movq 8(%rbx),%r13
+        cmpq  %r13,8(%rax)
         jl true
         jmp fim_cond
         true:
@@ -213,28 +211,29 @@ bestFit:
 
 lista_vazia:
         pushq 16(%rbp)  # bytes
-        calculaTam      #  rax = tam
+        call calculaTam      #  rax = tam
         popq %rbx       # rbx = bytes
         pushq %rax 
-        ajusta_brk      # seta o brk para tbm
+        call ajusta_brk      # seta o brk para tbm
         popq %rax
 
-        movq $1,0($brk_original)  # seta status
-        movq %rbx,8($brk_original) # seta tamamnho
+        lea brk_original(%rip), %rcx
+        movq $1,(%rcx)  # seta status
+        movq %rbx,8(%rcx) # seta tamamnho
         
         # verifica se sobrou espaco
 
         subq %rbx, %rax  # rax = tam - bytes
-        cmp $0, %rax
+        cmpq $0, %rax
         je semMemR
-        movq $brk_original,%rbx
+        movq %rcx,%rbx
         add $16,%rbx
-        addq 8($brk_original), %rbx
+        addq 8(%rcx), %rbx
         movq $0,(%rbx)
         subq $16, %rax      # tam restante - header
         movq %rax,8(%rbx)
         semMemR:
-            movq $brk_original, %rax     # rax = end
+            movq %rcx, %rax     # rax = end
             addq $16, %rax          # rax = end de dados
             ret
 
@@ -242,7 +241,7 @@ calculaTam:
     pushq %rbp
     movq %rsp, %rbp
 
-    cmp $4096,16(%rbp)
+    cmpq $4096,16(%rbp)
     jg else # if(bytes > 4096) jump else
     movq $4096,%rax # tam = 4096
     popq %rbp

@@ -1,10 +1,9 @@
 CC = gcc              # Compilador C
 AS = as               # Assembler
-LD = ld               # Linker
 
-CFLAGS = -Wall -O2    # Flags para o compilador C
-ASFLAGS =             # Flags para o assembler
-LDFLAGS =             # Flags para o linker
+CFLAGS = -Wall -O2 -fPIC           # Flags para o compilador C
+ASFLAGS =                   # Flags para o assembler
+LDFLAGS = -nostartfiles -no-pie    # Flags para o linker
 
 OBJECTS = exemplo.o main.o meuAlocador.o
 
