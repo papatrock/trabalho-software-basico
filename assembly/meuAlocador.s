@@ -52,7 +52,7 @@ movq %rsp, %rbp
     movq $16, %rax
     pushq %rax
     call ajusta_brk
-    subq $8, %rsp
+    popq %r13
 
     # configurar nodo no novo espaço alocado
     lea brk_original(%rip), %rbx    # rbx = endereço de brk_original

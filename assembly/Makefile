@@ -19,4 +19,4 @@ clean:
 	rm ./*.o
 
 purge:
-	rm exemplo *.o	
+	rm main *.o	
