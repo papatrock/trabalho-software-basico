@@ -20,11 +20,12 @@ ret_brk_atual:
     ret
 
 # sbrk(n)
+# rdi = n
 ajusta_brk:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq 16(%rbp), %rdx 
+    movq %rdi, %rdx 
     call ret_brk_atual           # Obter o valor atual do break em %rax
     addq %rdx, %rax              # Soma o deslocamento ao valor atual do break
     
@@ -33,8 +34,8 @@ ajusta_brk:
     movq $12, %rax           # Syscall 'brk'
     syscall                  # Ajusta o break
 
-    lea brk_atual(%rip), %rbx # endereço de brk)atual em rbx
-    movq %rax, (%rbx)         # novo valor do brk em brk_atual
+    lea brk_atual(%rip), %r12 # endereço de brk)atual em rbx
+    movq %rax, (%r12)         # novo valor do brk em brk_atual
 
     popq %rbp
     ret
@@ -49,10 +50,8 @@ movq %rsp, %rbp
     movq %rax, (%rcx)            # rcx = brk_original (val)
 
     # alocar espaço para o header
-    movq $16, %rax
-    pushq %rax
+    movq $16, %rdi
     call ajusta_brk
-    popq %r13
 
     # configurar nodo no novo espaço alocado
     lea brk_original(%rip), %rbx    # rbx = endereço de brk_original
@@ -70,7 +69,7 @@ ret
 
 
 # alocaMem(int bytes)
-# bytes =16(%rbp) --> parametro passado por valor
+# bytes =%rdi 
 
 alocaMem:
     pushq %rbp
@@ -117,26 +116,51 @@ alocaMem:
     fim_aloca_mem:
         popq %rbp
         ret
+    lista_vazia:
+        # parametro bytes em %rdi
+        call calculaTam      
+        movq %rax,%r13         # r13 = tam
+        movq %rdi,%rbx       # rbx = bytes
+        movq %rax,%rdi 
+        call ajusta_brk      # seta o brk para tam
+
+        lea brk_original(%rip), %rcx
+        movq $1,(%rcx)  # seta status
+        movq %rbx,8(%rcx) # seta tamamnho
+        
+        # verifica se sobrou espaco
+
+        subq %rbx, %r13  # rax = tam - bytes
+        cmpq $0, %r13
+        je semMemR
+        movq brk_original,%rbx
+        add $16,%rbx
+        addq 8(%rcx), %rbx
+        movq $0,(%rbx)
+        subq $16, %r13      # tam restante - header
+        movq %r13,8(%rbx)
+        semMemR:
+            movq %rcx, %rax     # rax = end
+            addq $16, %rax          # rax = end de dados
+            jmp fim_aloca_mem
+
 
 # alocaNovoBloco(bytes) aloca novo bloco ao fim do bloco alocado
 alocaNovoBloco:
     lea brk_atual(%rip), %rax  # Carrega o endereço de brk_atual em %rax
     movq %rax, -8(%rsp)        # Move o endereço de brk_atual para a pilha
 
-    movq $16,%rax
-    pushq %rax
+    movq $16,%rdi
     call ajusta_brk     # sbrk(16)
-    addq $8, %rsp
     
-    pushq 16(%rbp)      # empilha bytes
+    movq 16(%rbp), %rdi     # empilha bytes
     call calculaTam
     
     subq $8, %rsp       # espaco para tam
     movq %rax, -16(%rbp)  # tam = multiplo de 4096
 
-    pushq -16(%rbp)
+    movq -16(%rbp),%rdi
     call ajusta_brk     # sbrk(tam)
-    addq $8, %rsp
 
     movq -8(%rbp), %rbx 
     movq $1,0(%rbx)     # seta status
@@ -210,47 +234,19 @@ bestFit:
         popq %rbp
         ret
 
-
-
-lista_vazia:
-        pushq 16(%rbp)  # bytes
-        call calculaTam      #  rax = tam
-        popq %rbx       # rbx = bytes
-        pushq %rax 
-        call ajusta_brk      # seta o brk para tbm
-        popq %rax
-
-        lea brk_original(%rip), %rcx
-        movq $1,(%rcx)  # seta status
-        movq %rbx,8(%rcx) # seta tamamnho
-        
-        # verifica se sobrou espaco
-
-        subq %rbx, %rax  # rax = tam - bytes
-        cmpq $0, %rax
-        je semMemR
-        movq %rcx,%rbx
-        add $16,%rbx
-        addq 8(%rcx), %rbx
-        movq $0,(%rbx)
-        subq $16, %rax      # tam restante - header
-        movq %rax,8(%rbx)
-        semMemR:
-            movq %rcx, %rax     # rax = end
-            addq $16, %rax          # rax = end de dados
-            ret
-
+# bytes = %rdi
 calculaTam:
     pushq %rbp
     movq %rsp, %rbp
 
-    cmpq $4096,16(%rbp)
+    movq $4096, %r11
+    cmpq %r11,%rdi
     jg else # if(bytes > 4096) jump else
     movq $4096,%rax # tam = 4096
     popq %rbp
     ret
     else: # Calcula multiplo de 4096
-        movq 16(%rbp), %rax    # rax = bytes
+        movq %rdi, %rax    # rax = bytes
         addq $4096, %rax       # Soma 4096
         subq $1, %rax          # Subtrai 1
         xorq %rdx, %rdx        # Limpa %rdx para evitar erros no divq
