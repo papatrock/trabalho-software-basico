@@ -2,9 +2,9 @@
 - [x] inicia alocador
 - [ ] Aloca mem
     - [x] primeira alocação
-    - [ ] n alocações
+    - [x] n alocações
     - [ ] criar mais espaço se alocação não couber em nenhum bloco livre
-    - [ ] best fit
+    - [x] best fit
 - [ ] libera mem
     - [ ] zerar memoria, colocar o nodo na lista de blocos livres e retirar da lista de blocos ocupados
     - [ ] ao liberar memoria verificar se blocos adjacentes estão livres, se sim fazer a fusão
