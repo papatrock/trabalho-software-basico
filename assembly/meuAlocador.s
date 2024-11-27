@@ -74,29 +74,28 @@ ret
 alocaMem:
     pushq %rbp
     movq %rsp, %rbp
-    lea brk_original(%rip), %rcx
+    movq brk_original, %rcx
     cmpq $0,8(%rcx)
     je lista_vazia
     # --- lista não vazia, procura bloco ------
-    pushq 16(%rbp)
+    
     call bestFit        # rax = retorno do bestFit
-    addq $8, %rsp
     cmpq $0, %rax        # rax = 0 não achou bloco, cria outro no fim
     je if_bestFit_0
     # --- achou um bloco ----
     movq $1,0(%rax)     # seta status
-    movq 8(%rax), %rbx  # rbx = tam
-    movq 16(%rbp),%r11
-    movq %r11, 8(%rax) # seta tam
+    movq 8(%rax), %rdx  # rbx = tam
+    movq %rdi, 8(%rax)  # seta tam (rdi = bytes)
 
     # ---verifica se sobrou espaço no bloco -----
-    subq 16(%rbp),%rbx  # rbx = tam - bytes
+    subq %rdi,%rbx          # rbx = tam - bytes
     cmpq $0, %rbx
     je sem_mem_restante
     subq $8,%rsp
-    movq %rax, -8(%rbp)  # endereço do bloco escolhido
-    add $16,%rax            # soma o header
-    add 16(%rbp), %rax      # soma o tamanho
+    movq %rax, -8(%rbp)     # endereço do bloco escolhido
+    addq $16,%rax            # soma o header
+    movq -8(%rbp), %r13
+    addq 8(%r13), %rax      # soma o tamanho
     movq $0, 0(%rax)        # seta status
     subq $16, %rbx          # tam = tam - header
     movq %rbx, 8(%rax)      # seta o tamanho
@@ -110,12 +109,13 @@ alocaMem:
     if_bestFit_0:
         movq brk_atual, %rcx
         pushq %rcx
-        pushq 16(%rbp)
+        # pushq 16(%rbp)
         call alocaNovoBloco
         subq $16, %rsp
     fim_aloca_mem:
         popq %rbp
         ret
+        
     lista_vazia:
         # parametro bytes em %rdi
         call calculaTam      
@@ -124,7 +124,7 @@ alocaMem:
         movq %rax,%rdi 
         call ajusta_brk      # seta o brk para tam
 
-        lea brk_original(%rip), %rcx
+        movq brk_original, %rcx
         movq $1,(%rcx)  # seta status
         movq %rbx,8(%rcx) # seta tamamnho
         
@@ -190,31 +190,30 @@ semMemRestante:
     ret
 
 # bestFit(tam) 
-# tam = 16(%rbp)
+# tam = %rdi
 bestFit:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq 16(%rbp), %rbx           # rbx = tam
     sub $16,%rsp                 # aloca espaço para 2 long int
-    lea brk_original(%rip), %rcx
-    movq %rcx, -8(%rbp) # tmp = inicio - tmp = -8(%rbp)
+    movq brk_original, %rcx
+    movq %rcx, -8(%rbp)            # tmp = inicio - tmp = -8(%rbp)
     movq $0, -16(%rbp)           # bestFit = -16(%rbp)  0 == NULL
-    lea brk_atual(%rip), %r12
+    movq brk_atual, %r12
     # --- percorre os blocos -----
     while:
-        cmpq %r12,-8(%rbp)     # se endereço do tmp >= brk sai do while
+        cmpq %r12,-8(%rbp)            # se endereço do tmp >= brk sai do while
         jge fim_while
         movq -8(%rbp), %rax           # rax = tmp.status
-        cmpq $0, 0(%rax)          # Compara tmp.status com 0
+        cmpq $0, 0(%rax)              # Compara tmp.status com 0
         jne fim_cond
         movq -8(%rbp), %rbx
-        movq 8(%rbx), %rbx          # rbx = nodo.tam
-        cmpq 16(%rbp),%rbx
+        movq 8(%rbx), %rbx            # rbx = nodo.tam
+        cmpq -16(%rbp),%rbx
         jl fim_cond
-        cmpq $0, -16(%rbp)           # se bestFit == 0, é o primeiro bloco com espaço, logo bestFit = bloco
+        cmpq $0, -16(%rbp)            # se bestFit == 0, é o primeiro bloco com espaço, logo bestFit = bloco
         je true
-        movq -16(%rbp), %rbx        # rbx = bestFit atual
+        movq -16(%rbp), %rbx          # -16(rbp) = bestfit atual
         movq 8(%rbx),%r13
         cmpq  %r13,8(%rax)
         jl true
@@ -231,6 +230,7 @@ bestFit:
         
     fim_while:
         movq -16(%rbp), %rax        # rax = bestFit
+        add $16,%rsp
         popq %rbp
         ret
 
