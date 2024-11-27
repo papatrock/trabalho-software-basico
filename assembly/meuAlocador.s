@@ -34,8 +34,8 @@ ajusta_brk:
     movq $12, %rax           # Syscall 'brk'
     syscall                  # Ajusta o break
 
-    lea brk_atual(%rip), %r12 # endereço de brk)atual em rbx
-    movq %rax, (%r12)         # novo valor do brk em brk_atual
+    lea brk_atual(%rip), %r15 # endereço de brk)atual em rbx
+    movq %rax, (%r15)         # novo valor do brk em brk_atual
 
     popq %rbp
     ret
@@ -107,15 +107,13 @@ alocaMem:
         jmp fim_aloca_mem
 
     if_bestFit_0:
-        movq brk_atual, %rcx
-        pushq %rcx
-        # pushq 16(%rbp)
         call alocaNovoBloco
-        subq $16, %rsp
+        movq -8(%rsp),%rdi
+
     fim_aloca_mem:
         popq %rbp
         ret
-        
+
     lista_vazia:
         # parametro bytes em %rdi
         call calculaTam      
@@ -147,44 +145,46 @@ alocaMem:
 
 # alocaNovoBloco(bytes) aloca novo bloco ao fim do bloco alocado
 alocaNovoBloco:
-    lea brk_atual(%rip), %rax  # Carrega o endereço de brk_atual em %rax
-    movq %rax, -8(%rsp)        # Move o endereço de brk_atual para a pilha
+    movq brk_atual,%r12     # rbx = inicio do bloco a ser alocado
 
-    movq $16,%rdi
-    call ajusta_brk     # sbrk(16)
-    
-    movq 16(%rbp), %rdi     # empilha bytes
     call calculaTam
+    sub $16,%rsp
+    movq %rdi,-8(%rbp)         # bytes
+    movq %rax,-16(%rbp)      # tam
+   
     
-    subq $8, %rsp       # espaco para tam
-    movq %rax, -16(%rbp)  # tam = multiplo de 4096
+    movq $16,%rdi           # tamanho do header
+    addq -16(%rbp),%rdi
+    call ajusta_brk     
 
-    movq -16(%rbp),%rdi
-    call ajusta_brk     # sbrk(tam)
-
-    movq -8(%rbp), %rbx 
-    movq $1,0(%rbx)     # seta status
-    movq 16(%rbp),%r11
-    movq %r11,8(%rbx)    # seta tam
+    movq $1,0(%r12)     # seta status
+    movq -8(%rbp),%r11
+    movq %r11,8(%r12)    # seta tam
     
     # --- verifica se sobrou memoria no bloco ------
     movq -16(%rbp), %rbx  # rbx = tam
-    subq 8(%rbp), %rbx  # rbx = tam - bytes
+    subq -8(%rbp), %rbx  # rbx = tam - bytes
     cmpq $0, %rbx
     je semMemRestante
+    movq %rbx,%r14
+    subq $16, %r14      # tamanho que sobrou
+    cmp $17,%r14        # se nao tiver espaço para o header +1
+    jl semMemParaHeader
 
-    movq -8(%rbp), %rax
-    add $16, %rax  
-    add 8(%rbp), %rax      # rax = end da mem restante
+    movq %r12,%rax
+    addq $16,%rax
+    addq 8(%r12),%rax
     movq $0,0(%rax)         # seta status
     subq $16, %rbx          # header tam restantes - header
     movq %rbx,8(%rax)       # seta o tamamnho
+    jmp semMemRestante
+semMemParaHeader:
+    addq %rbx,8(%r12)        #  adiciona o espaço a mais no bloco alocado   
 semMemRestante:
-    movq -8(%rbp), %rax     # rax = end
+    movq %r12, %rax     # rax = end
     addq $16, %rax          # rax = end de dados
-
-    # limpa pilha
-    addq $16, %rsp
+    
+    addq $16, %rsp  # limpa pilha
 
     popq %rbp
     ret
@@ -204,12 +204,12 @@ bestFit:
     while:
         cmpq %r12,-8(%rbp)            # se endereço do tmp >= brk sai do while
         jge fim_while
-        movq -8(%rbp), %rax           # rax = tmp.status
+        movq -8(%rbp), %rax           # rax = tmp
         cmpq $0, 0(%rax)              # Compara tmp.status com 0
         jne fim_cond
         movq -8(%rbp), %rbx
         movq 8(%rbx), %rbx            # rbx = nodo.tam
-        cmpq -16(%rbp),%rbx
+        cmpq %rdi,%rbx
         jl fim_cond
         cmpq $0, -16(%rbp)            # se bestFit == 0, é o primeiro bloco com espaço, logo bestFit = bloco
         je true
