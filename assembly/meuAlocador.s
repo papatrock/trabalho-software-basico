@@ -185,7 +185,7 @@ semMemRestante:
     addq $16, %rax          # rax = end de dados
     
     addq $16, %rsp  # limpa pilha
-
+    addq $8, %rsp   # TODO descobrir da onde vem esses 8 a mais
     popq %rbp
     ret
 
