@@ -6,9 +6,9 @@
     - [x] criar mais espaço se alocação não couber em nenhum bloco livre
     - [x] best fit
 - [ ] libera mem
-    - [ ] zerar memoria, colocar o nodo na lista de blocos livres e retirar da lista de blocos ocupados
-    - [ ] ao liberar memoria verificar se blocos adjacentes estão livres, se sim fazer a fusão
+    - [ ] setar status como 0 (zerar memoria talvez? nao sei) 
 - [ ] Finaliza alocador
+    - [ ] retornar o brk para o brk_original     
 
 # Enunciado
 Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
