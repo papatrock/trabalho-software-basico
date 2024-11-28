@@ -1,9 +1,9 @@
 # Todo assembly
 - [x] inicia alocador
-- [ ] Aloca mem
+- [x] Aloca mem
     - [x] primeira alocação
     - [x] n alocações
-    - [ ] criar mais espaço se alocação não couber em nenhum bloco livre
+    - [x] criar mais espaço se alocação não couber em nenhum bloco livre
     - [x] best fit
 - [ ] libera mem
     - [ ] zerar memoria, colocar o nodo na lista de blocos livres e retirar da lista de blocos ocupados
