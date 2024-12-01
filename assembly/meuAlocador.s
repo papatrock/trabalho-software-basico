@@ -2,9 +2,9 @@
     brk_atual: .quad 0
     brk_original: .quad 0
 
-    hashtag .byte '#'
-    ponto .byte '.' 
-    mais .byte '+'
+    hashtag: .string "#"
+    ponto: .string "." 
+    mais: .string "+"
 
 .section .text
     
@@ -296,14 +296,13 @@ imprimeMapa:
                 #instrucoes for1 
 
                 #print #
-                li $v0, 4 #instrução de impressao
-                la $a0, hashtag 
-                syscall
+                mov $hashtag, %rdi
+                call printf
 
                 #incrementa contador for
                 addq $1, %r13 
 
-            for1_fim
+            for1_fim:
             movq $0, %r13 # %r13: contador = 0
 
             #calcula o tamanho armazenado
@@ -319,31 +318,28 @@ imprimeMapa:
             #instrucoes for2 
                 
                 movq %r14, %rcx # %r14: status 
-                cmp %rcx, $0 #compara com 0 
-                jmp else
+                movq $0, %r15
+                cmp %rcx, %r15 #compara com 0 
+                jmp else_
 
                 #imprime . 
-                li $v0, 4 #instrução de impressao
-                la $a0, ponto 
-                syscall
+                mov $ponto, %rdi
+                call printf
 
                 jmp fim_if 
 
-                else: 
+                else_: 
 
                 #imprime +
-                li $v0, 4 #instrução de impressao
-                la $a0, mais 
-                syscall
+                mov $mais, %rdi
+                call printf
                 
                 fim_if:
             
             #incrementa contador for
             addq $1, %r13 
 
-            for1_fim:
-
-
+        for2_fim:
 
         jmp while_inicio
     
