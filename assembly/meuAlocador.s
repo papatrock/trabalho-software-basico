@@ -2,6 +2,10 @@
     brk_atual: .quad 0
     brk_original: .quad 0
 
+    hashtag .byte '#'
+    ponto .byte '.' 
+    mais .byte '+'
+
 .section .text
     
 .globl ret_brk_atual,ajusta_brk,iniciaAlocador,alocaMem
@@ -12,9 +16,9 @@ ret_brk_atual:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq $12, %rax
-    movq $0, %rdi                   
-    syscall
+        movq $12, %rax
+        movq $0, %rdi                   
+        syscall
 
     popq %rbp
     ret
@@ -25,17 +29,17 @@ ajusta_brk:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq %rdi, %rdx 
-    call ret_brk_atual           # Obter o valor atual do break em %rax
-    addq %rdx, %rax              # Soma o deslocamento ao valor atual do break
+        movq %rdi, %rdx 
+        call ret_brk_atual           # Obter o valor atual do brk em %rax
+        addq %rdx, %rax              # Soma o deslocamento ao valor atual do brk
     
     
-    movq %rax, %rdi          # Prepara o novo valor para ajustar o break
-    movq $12, %rax           # Syscall 'brk'
-    syscall                  # Ajusta o break
+        movq %rax, %rdi          # Prepara o novo valor para ajustar o brk
+        movq $12, %rax           # Syscall 'brk'
+        syscall                  # Ajusta o brk
 
-    lea brk_atual(%rip), %r15 # endereço de brk)atual em rbx
-    movq %rax, (%r15)         # novo valor do brk em brk_atual
+        lea brk_atual(%rip), %r15 # endereço de brk atual em rbx
+        movq %rax, (%r15)         # novo valor do brk em brk_atual
 
     popq %rbp
     ret
@@ -44,7 +48,7 @@ iniciaAlocador:
 pushq %rbp 
 movq %rsp, %rbp 
 
-     # salvar endereço inicial da heap em brk_original
+    # salvar endereço inicial da heap em brk_original
     call ret_brk_atual
     lea brk_original(%rip), %rcx # rcx = end. brk_original (var)
     movq %rax, (%rcx)            # rcx = brk_original (val)
@@ -256,3 +260,93 @@ calculaTam:
         
         popq %rbp
         ret                    # retorna tam calculado em %rax
+
+imprimeMapa: 
+    pushq %rbp 
+    movq %rsp, %rbp   
+
+    #aloca espaço na pilha para o endereço de bloco 
+    sub $8,%rsp
+
+    #armazena o endereço de brk_original em %rcx
+    movq brk_original, %rcx
+    #armazena %rcx na pilha
+    movq %rcx, -8(%rbp)  
+
+    #armazena o endereço do brk_atual em %r12
+    movq brk_atual, %r12          
+
+    while_inicio: 
+        #comparação while
+        cmpq %r12,-8(%rbp) 
+        jge while_fim
+
+            #instruções while
+            movq $0, %r13 # %r13: contador = 0
+            
+            #calcula tamanho no nodo 
+            movq 8(%rcx), %r11
+            addq $16, %r11
+
+            for1_inicio: 
+                #comparação for 1
+                cmpq %r13, %r11 #se %r13 > %r11
+                jg for1_fim
+            
+                #instrucoes for1 
+
+                #print #
+                li $v0, 4 #instrução de impressao
+                la $a0, hashtag 
+                syscall
+
+                #incrementa contador for
+                addq $1, %r13 
+
+            for1_fim
+            movq $0, %r13 # %r13: contador = 0
+
+            #calcula o tamanho armazenado
+            subq $16, %r11
+
+            for2_inicio: 
+            
+            #comparação for 2
+            
+            cmpq %r13, 8(%rcx) #se %r13 < 8(%rcx)
+            jg for2_fim
+
+            #instrucoes for2 
+                
+                movq %r14, %rcx # %r14: status 
+                cmp %rcx, $0 #compara com 0 
+                jmp else
+
+                #imprime . 
+                li $v0, 4 #instrução de impressao
+                la $a0, ponto 
+                syscall
+
+                jmp fim_if 
+
+                else: 
+
+                #imprime +
+                li $v0, 4 #instrução de impressao
+                la $a0, mais 
+                syscall
+                
+                fim_if:
+            
+            #incrementa contador for
+            addq $1, %r13 
+
+            for1_fim:
+
+
+
+        jmp while_inicio
+    
+
+    popq %rbp 
+    ret 

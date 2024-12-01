@@ -183,3 +183,4 @@ calculaTam:
         
         popq %rbp
         ret                    # retorna tam calculado em %rax
+
