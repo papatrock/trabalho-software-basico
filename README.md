@@ -5,10 +5,10 @@
     - [x] n alocações
     - [x] criar mais espaço se alocação não couber em nenhum bloco livre
     - [x] best fit
-- [ ] libera mem
-    - [ ] setar status como 0 (zerar memoria talvez? nao sei) 
-- [ ] Finaliza alocador
-    - [ ] retornar o brk para o brk_original     
+- [x] libera mem
+    - [ ] voltar o brk caso seja o ultimo bloco
+- [x] Finaliza alocador
+    - [x] retornar o brk para o brk_original     
 
 # Enunciado
 Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
