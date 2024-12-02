@@ -8,7 +8,8 @@
 - [x] libera mem
     - [ ] voltar o brk caso seja o ultimo bloco
 - [x] Finaliza alocador
-    - [x] retornar o brk para o brk_original     
+    - [x] retornar o brk para o brk_original
+- [ ] imprimeMapa    
 
 # Enunciado
 Implemente o algoritmo proposto na Seção 6.1.2 em **assembly**.
