@@ -8,7 +8,7 @@
 
 .section .text
     
-.globl ret_brk_atual,ajusta_brk,iniciaAlocador,alocaMem
+.globl ret_brk_atual,ajusta_brk,iniciaAlocador,alocaMem,liberaMem,finalizaAlocador,imprimeMapa
 
 
 # Retorna o valor do brk atual em rax
@@ -88,7 +88,7 @@ alocaMem:
     je if_bestFit_0
     # --- achou um bloco ----
     movq $1,0(%rax)     # seta status
-    movq 8(%rax), %rdx  # rbx = tam
+    movq 8(%rax), %rbx  # rbx = tam
     movq %rdi, 8(%rax)  # seta tam (rdi = bytes)
 
     # ---verifica se sobrou espaço no bloco -----
@@ -132,7 +132,7 @@ alocaMem:
         
         # verifica se sobrou espaco
 
-        subq %rbx, %r13  # rax = tam - bytes
+        subq %rbx, %r13  # rbx = tam - bytes
         cmpq $0, %r13
         je semMemR
         movq brk_original,%rbx
@@ -343,6 +343,40 @@ imprimeMapa:
 
         jmp while_inicio
     
+while_fim:
+    popq %rbp 
+    ret 
+
+
+
+
+
+
+# liberaMem(void *ptr)
+# %rdi = *ptr (inicio da memoria alocada)
+liberaMem:
+    pushq %rbp 
+    movq %rsp, %rbp
+
+    movq %rdi,%r14
+    sub $16,%r14
+    movq $0,(%r14)
+
 
     popq %rbp 
     ret 
+
+# volta o brk para brk_original
+finalizaAlocador:
+    pushq %rbp
+    movq %rsp, %rbp
+
+        movq $12, %rax
+        movq brk_original, %rdi                   
+        syscall
+
+    lea brk_atual(%rip), %r15 # endereço de brk atual em rbx
+    movq %rax, (%r15)         # novo valor do brk em brk_atual
+
+    popq %rbp
+    ret

@@ -13,10 +13,10 @@ int main (long int argc, char** argv) {
   //imprimeMapa();                  // ################**********##############****
 
   c = (void *) alocaMem (5632);
-  //liberaMem(a);
+  liberaMem(a);
   //imprimeMapa();                  // ################----------##############****
-  //liberaMem(b);                   // ################----------------------------
+  liberaMem(b);                   // ################----------------------------
                                   // ou
                                   // <vazio>
-  //finalizaAlocador();
+  finalizaAlocador();
 }
