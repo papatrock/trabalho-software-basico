@@ -40,8 +40,9 @@ ajusta_brk:
         movq $12, %rax           # Syscall 'brk'
         syscall                  # Ajusta o brk
 
-        lea brk_atual(%rip), %r15 # endereço de brk atual em rbx
-        movq %rax, (%r15)         # novo valor do brk em brk_atual
+        # lea brk_atual(%rip), %r15 # endereço de brk atual em rbx
+         
+        movq %rax, (brk_atual)         # novo valor do brk em brk_atual
 
     popq %rbp
     ret
@@ -52,23 +53,24 @@ movq %rsp, %rbp
 
     # salvar endereço inicial da heap em brk_original
     call ret_brk_atual
-    lea brk_original(%rip), %rcx # rcx = end. brk_original (var)
-    movq %rax, (%rcx)            # rcx = brk_original (val)
+    # lea brk_original(%rip), %rcx # rcx = end. brk_original (var)
+
+    movq %rax, (brk_original)            # rcx = brk_original (val)
 
     # alocar espaço para o header
     movq $16, %rdi
     call ajusta_brk
 
     # configurar nodo no novo espaço alocado
-    lea brk_original(%rip), %rbx    # rbx = endereço de brk_original
-    movq (%rbx), %rcx               # rcx = brk_original (valor atual da heap, início do header)
+    # lea brk_original(%rip), %rbx    # rbx = endereço de brk_original
+    movq brk_original, %rcx               # rcx = brk_original (valor atual da heap, início do header)
     movq $0, (%rcx)                 # status = 0
     movq $0, 8(%rcx)                # tamanho = 0
 
     # Atualizar brk_atual para o final do header
     addq $16, %rcx                  # brk_atual = brk_original + tamanho do header
-    lea brk_atual(%rip), %rbx       # rbx = endereço de brk_atual
-    movq %rcx, (%rbx)               # atualiza brk_atual com o novo valor
+    # lea brk_atual(%rip), %rbx       # rbx = endereço de brk_atual
+    movq %rcx, brk_atual               # atualiza brk_atual com o novo valor
 
 popq %rbp
 ret
@@ -80,7 +82,7 @@ ret
 alocaMem:
     pushq %rbp
     movq %rsp, %rbp
-    movq brk_original, %rcx
+    movq (brk_original), %rcx
     cmpq $0,8(%rcx)
     je lista_vazia
     # --- lista não vazia, procura bloco ------
@@ -248,18 +250,18 @@ calculaTam:
 
     movq $32, %r11
     cmpq %r11,%rdi
-    jg else # if(bytes > 32) jump else
-    movq $32,%rax # tam = 32
+    jg else # if(bytes > 4096) jump else
+    movq $32,%rax # tam = 4096
     popq %rbp
     ret
-    else: # Calcula multiplo de 32
+    else: # Calcula multiplo de 4096
         movq %rdi, %rax    # rax = bytes
-        addq $32, %rax       # Soma 32
+        addq $32, %rax       # Soma 4096
         subq $1, %rax          # Subtrai 1
         xorq %rdx, %rdx        # Limpa %rdx para evitar erros no divq
         movq $32, %rbx       # Divisor
-        divq %rbx              # Divide %rax por 32 (resultado em %rax)
-        imulq $32, %rax      # Multiplica o quociente por 32
+        divq %rbx              # Divide %rax por 4096 (resultado em %rax)
+        imulq $32, %rax      # Multiplica o quociente por 4096
         
         popq %rbp
         ret                    # retorna tam calculado em %rax
@@ -279,18 +281,17 @@ imprimeMapa:
 
     #verificar se a lista esta vazia 
     call ret_brk_atual
-    pushq %rax   
+    movq %rax,%r15
 
 
+    
     cmpq $0,8(%r12)
     je lista_vazia_imprime
-    
-    
                
 
     while_inicio: 
         # comparação while
-        cmpq -8(%rbp), %r12
+        cmpq %r15,%r12
         jge while_fim
 
             # instruções while
@@ -301,6 +302,7 @@ imprimeMapa:
 
             # imprime o header, sempre 16
             for1_inicio: 
+            
                 # comparação for 1
                 cmpq $15, %r13 # se %r13 > %r14
                 jg for1_fim
@@ -364,12 +366,11 @@ imprimeMapa:
         while_fim:
         
     
-    popq %rax
     popq %rbp 
     ret
 
     lista_vazia_imprime: 
-    mov $quebralinha, %rdi
+    mov $vazio, %rdi
     call printf
     jmp while_fim
 
