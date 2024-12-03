@@ -2,21 +2,21 @@
 #include "meuAlocador.h"
 
 int main (long int argc, char** argv) {
-  void *a, *b, *c;
+  void *a, *b;
 
   iniciaAlocador();               // Impressão esperada
-  //imprimeMapa();                  // <vazio>
+  imprimeMapa();                  // <vazio>
 
   a = (void *) alocaMem(10);
   imprimeMapa();                  // ################**********
-  b = (void *) alocaMem(4);
+  
+  /*b = (void *) alocaMem(4);
   imprimeMapa();                  // ################**********##############****
-
-  c = (void *) alocaMem (5632);
   liberaMem(a);
-  //imprimeMapa();                  // ################----------##############****
+  imprimeMapa();                  // ################----------##############****
   liberaMem(b);                   // ################----------------------------
                                   // ou
                                   // <vazio>
-  finalizaAlocador();
+  */
+ finalizaAlocador();
 }

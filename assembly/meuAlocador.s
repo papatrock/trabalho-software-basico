@@ -5,11 +5,11 @@
     hashtag: .string "#"
     ponto: .string "." 
     mais: .string "+"
+    vazio: .string "<vazio>\n"
     quebralinha: .asciz "\n"
 
 
 .section .text
-    
 .globl ret_brk_atual,ajusta_brk,iniciaAlocador,alocaMem,liberaMem,finalizaAlocador,imprimeMapa
 
 
@@ -240,70 +240,26 @@ bestFit:
         popq %rbp
         ret
 
-# worstFit(tam) 
-# tam = %rdi
-worstFit:
-    pushq %rbp
-    movq %rsp, %rbp
-
-    sub $16,%rsp                 # aloca espaço para 2 long int
-    movq brk_original, %rcx
-    movq %rcx, -8(%rbp)            # tmp = inicio - tmp = -8(%rbp)
-    movq $0, -16(%rbp)           # worstFit = -16(%rbp)  0 == NULL
-    movq brk_atual, %r12
-    # --- percorre os blocos -----
-    while:
-        cmpq %r12,-8(%rbp)            # se endereço do tmp >= brk sai do while
-        jge fim_while
-        movq -8(%rbp), %rax           # rax = tmp
-        cmpq $0, 0(%rax)              # Compara tmp.status com 0
-        jne fim_cond
-        movq -8(%rbp), %rbx
-        movq 8(%rbx), %rbx            # rbx = nodo.tam
-        cmpq %rdi,%rbx
-        jl fim_cond
-        cmpq $0, -16(%rbp)            # se worstFit == 0, é o primeiro bloco com espaço, logo worstFit = bloco
-        je true
-        movq -16(%rbp), %rbx          # -16(rbp) = worstfit atual
-        movq 8(%rbx),%r13
-        cmpq 8(%rax), %r13 #compara tamanho do worstFit atual com tmp 
-        jl true
-        jmp fim_cond
-        true:
-            movq %rax,-16(%rbp)
-
-        fim_cond:
-            movq -8(%rbp), %rbx
-            movq 8(%rbx), %rbx      # rbx = tmp.tam
-            addq $16,-8(%rbp)       # tmp = tmp + header
-            addq %rbx,-8(%rbp)      # tmp = tmp + tmpAnterior.tam
-        jmp while
-        
-    fim_while:
-        movq -16(%rbp), %rax        # rax = worstFit
-        add $16,%rsp
-        popq %rbp
-        ret
 
 # bytes = %rdi
 calculaTam:
     pushq %rbp
     movq %rsp, %rbp
 
-    movq $4096, %r11
+    movq $32, %r11
     cmpq %r11,%rdi
-    jg else # if(bytes > 4096) jump else
-    movq $4096,%rax # tam = 4096
+    jg else # if(bytes > 32) jump else
+    movq $32,%rax # tam = 32
     popq %rbp
     ret
-    else: # Calcula multiplo de 4096
+    else: # Calcula multiplo de 32
         movq %rdi, %rax    # rax = bytes
-        addq $4096, %rax       # Soma 4096
+        addq $32, %rax       # Soma 32
         subq $1, %rax          # Subtrai 1
         xorq %rdx, %rdx        # Limpa %rdx para evitar erros no divq
-        movq $4096, %rbx       # Divisor
-        divq %rbx              # Divide %rax por 4096 (resultado em %rax)
-        imulq $4096, %rax      # Multiplica o quociente por 4096
+        movq $32, %rbx       # Divisor
+        divq %rbx              # Divide %rax por 32 (resultado em %rax)
+        imulq $32, %rax      # Multiplica o quociente por 32
         
         popq %rbp
         ret                    # retorna tam calculado em %rax
@@ -319,11 +275,22 @@ imprimeMapa:
     # armazena o endereço de brk_original em %r12
     movq brk_original, %r12
     # armazena %r12 na pilha
-    #movq %r12, -8(%rbp)          
+    # movq %r12, -8(%rbp)
+
+    #verificar se a lista esta vazia 
+    call ret_brk_atual
+    pushq %rax   
+
+
+    cmpq $0,8(%r12)
+    je lista_vazia_imprime
+    
+    
+               
 
     while_inicio: 
         # comparação while
-        cmpq brk_atual, %r12
+        cmpq -8(%rbp), %r12
         jge while_fim
 
             # instruções while
@@ -358,12 +325,12 @@ imprimeMapa:
             
             # comparação for 2
             
-            cmpq 8(%r12),%r13 # se %r13 < 8(%rcx)
-            jg for2_fim
+            cmpq 8(%r12),%r13 # se %r13 <= 8(%rcx)
+            jge for2_fim
 
             # instrucoes for2 
                 # bloco atual em r12
-                cmp $0, (%r12) # compara status 
+                cmpq $0, (%r12) # compara status 
                 jne else_
 
                 # imprime . 
@@ -381,7 +348,7 @@ imprimeMapa:
             
             # incrementa contador for
             addq $1, %r13 
-            jmp for2_inicio
+            jmp for2_inicio 
 
         for2_fim:
 
@@ -395,10 +362,16 @@ imprimeMapa:
         jmp while_inicio
 
         while_fim:
+        
     
-    #addq $8,%rsp
+    popq %rax
     popq %rbp 
     ret
+
+    lista_vazia_imprime: 
+    mov $quebralinha, %rdi
+    call printf
+    jmp while_fim
 
 
 # liberaMem(void *ptr)
