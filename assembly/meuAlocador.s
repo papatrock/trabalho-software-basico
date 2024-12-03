@@ -229,7 +229,7 @@ bestFit:
         movq -16(%rbp), %rbx          # -16(rbp) = bestfit atual
         movq 8(%rbx),%r13
         cmpq  %r13,8(%rax)
-        jl true
+        jle true
         jmp fim_cond
         true:
             movq %rax,-16(%rbp)
@@ -287,7 +287,7 @@ imprimeMapa:
     #verificar se a lista esta vazia 
     call ret_brk_atual
     movq %rax,%r15
-
+    
 
     
     cmpq $0,8(%r12)
@@ -296,6 +296,7 @@ imprimeMapa:
 
     while_inicio: 
         # comparação while
+        
         cmpq %r15,%r12
         jge while_fim
 

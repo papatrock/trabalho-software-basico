@@ -5,32 +5,32 @@ int main (long int argc, char** argv) {
   void *a,*b,*c,*d,*e;
 
   iniciaAlocador(); 
-  imprimeMapa(); //ok
+  imprimeMapa();
   // 0) estado inicial
 
   a=(void *) alocaMem(100);
-  imprimeMapa(); //ok
+  imprimeMapa();
   b=(void *) alocaMem(130);
-  imprimeMapa(); //ok
-  c=(void *) alocaMem(140);
-  imprimeMapa(); //ok
+  imprimeMapa();
+  c=(void *) alocaMem(120);
+  imprimeMapa();
   d=(void *) alocaMem(110);
-  imprimeMapa(); //ok
+  imprimeMapa();
   // 1) Espero ver quatro segmentos ocupados
 
   liberaMem(b);
-  imprimeMapa(); //k
+  imprimeMapa(); 
   liberaMem(d);
-  imprimeMapa(); //ok
+  imprimeMapa(); 
   // 2) Espero ver quatro segmentos alternando
   //    ocupados e livres
 
   b=(void *) alocaMem(50);
-  imprimeMapa(); //ok
+  imprimeMapa();
   d=(void *) alocaMem(90);
-  imprimeMapa(); //ok
+  imprimeMapa();
   e=(void *) alocaMem(40);
-  imprimeMapa(); //ok
+  imprimeMapa();
   // 3) Deduzam
 	
   liberaMem(c);
