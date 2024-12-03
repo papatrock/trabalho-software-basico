@@ -124,9 +124,22 @@ nodo_t *bestFit(nodo_t *inicio,size_t tam){
     return bestFit;
 }
 
+nodo_t *worstFit(nodo_t *inicio,size_t tam){
+    nodo_t *tmp = inicio;
+    nodo_t *bestFit = NULL;
+
+    while(tmp != NULL){
+        if((tmp->tam >= tam && tmp->status == 0) && (bestFit == NULL || tmp->tam > bestFit->tam))
+            bestFit = tmp;
+        
+        tmp = tmp->prox;
+    }
+    return bestFit;
+}
+
 /*
  *Devolve para a heap o bloco que foi alocado por alocaMem->
- *O parâmetro bloco é o ende-reço retornado por alocaMem->
+ *O parâmetro bloco é o endereço retornado por alocaMem->
  *
  * */
 void liberaMem(void *endereco){

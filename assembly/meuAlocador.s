@@ -240,6 +240,51 @@ bestFit:
         popq %rbp
         ret
 
+# worstFit(tam) 
+# tam = %rdi
+worstFit:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    sub $16,%rsp                 # aloca espaço para 2 long int
+    movq brk_original, %rcx
+    movq %rcx, -8(%rbp)            # tmp = inicio - tmp = -8(%rbp)
+    movq $0, -16(%rbp)           # worstFit = -16(%rbp)  0 == NULL
+    movq brk_atual, %r12
+    # --- percorre os blocos -----
+    while:
+        cmpq %r12,-8(%rbp)            # se endereço do tmp >= brk sai do while
+        jge fim_while
+        movq -8(%rbp), %rax           # rax = tmp
+        cmpq $0, 0(%rax)              # Compara tmp.status com 0
+        jne fim_cond
+        movq -8(%rbp), %rbx
+        movq 8(%rbx), %rbx            # rbx = nodo.tam
+        cmpq %rdi,%rbx
+        jl fim_cond
+        cmpq $0, -16(%rbp)            # se worstFit == 0, é o primeiro bloco com espaço, logo worstFit = bloco
+        je true
+        movq -16(%rbp), %rbx          # -16(rbp) = worstfit atual
+        movq 8(%rbx),%r13
+        cmpq 8(%rax), %r13 #compara tamanho do worstFit atual com tmp 
+        jl true
+        jmp fim_cond
+        true:
+            movq %rax,-16(%rbp)
+
+        fim_cond:
+            movq -8(%rbp), %rbx
+            movq 8(%rbx), %rbx      # rbx = tmp.tam
+            addq $16,-8(%rbp)       # tmp = tmp + header
+            addq %rbx,-8(%rbp)      # tmp = tmp + tmpAnterior.tam
+        jmp while
+        
+    fim_while:
+        movq -16(%rbp), %rax        # rax = worstFit
+        add $16,%rsp
+        popq %rbp
+        ret
+
 # bytes = %rdi
 calculaTam:
     pushq %rbp
