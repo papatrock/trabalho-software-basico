@@ -2,7 +2,7 @@
     brk_atual: .quad 0
     brk_original: .quad 0
 
-    hashtag: .string "################"
+    hashtag: .string "#"
     ponto: .string "." 
     mais: .string "+"
     quebralinha: .asciz "\n"
@@ -290,7 +290,7 @@ imprimeMapa:
             # imprime o header, sempre 16
             for1_inicio: 
                 # comparação for 1
-                cmpq $0, %r13 # se %r13 > %r14
+                cmpq $15, %r13 # se %r13 > %r14
                 jg for1_fim
             
                 # instrucoes for1 
