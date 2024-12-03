@@ -2,10 +2,11 @@
     brk_atual: .quad 0
     brk_original: .quad 0
 
-    hashtag: .string "#"
+    hashtag: .string "################"
     ponto: .string "." 
     mais: .string "+"
-    quebralinha: .string "\n"
+    quebralinha: .asciz "\n"
+
 
 .section .text
     
@@ -262,100 +263,97 @@ calculaTam:
         popq %rbp
         ret                    # retorna tam calculado em %rax
 
+
 imprimeMapa: 
     pushq %rbp 
     movq %rsp, %rbp   
 
-    #aloca espaço na pilha para o endereço de bloco 
-    sub $8,%rsp
+    # aloca espaço na pilha para o endereço de bloco 
+    # subq $8,%rsp
 
-    #armazena o endereço de brk_original em %rcx
-    movq brk_original, %rcx
-    #armazena %rcx na pilha
-    movq %rcx, -8(%rbp)  
-
-    #armazena o endereço do brk_atual em %r12
-    movq brk_atual, %r12          
+    # armazena o endereço de brk_original em %r12
+    movq brk_original, %r12
+    # armazena %r12 na pilha
+    #movq %r12, -8(%rbp)          
 
     while_inicio: 
-        #comparação while
-        cmpq %r12,-8(%rbp) 
+        # comparação while
+        cmpq brk_atual, %r12
         jge while_fim
 
-            #instruções while
-            movq $0, %r13 # %r13: contador = 0
+            # instruções while
+            movq $0, %r13 # %r13: contador = 0 
             
-            #calcula tamanho no nodo 
-            movq 8(%rcx), %r11
-            addq $16, %r11
+            # calcula tamanho no nodo 
+            movq 8(%r12), %r14
 
+            # imprime o header, sempre 16
             for1_inicio: 
-                #comparação for 1
-                cmpq %r13, %r11 #se %r13 > %r11
+                # comparação for 1
+                cmpq $0, %r13 # se %r13 > %r14
                 jg for1_fim
             
-                #instrucoes for1 
-
-                #print
+                # instrucoes for1 
+                
+                # print
                 mov $hashtag, %rdi
                 call printf
 
-                #incrementa contador for
+                # incrementa contador for
                 addq $1, %r13 
+                jmp for1_inicio
 
             for1_fim:
-            movq $0, %r13 #%r13: contador = 0
+            movq $0, %r13 # %r13: contador = 0
 
-            #calcula o tamanho armazenado
-            subq $16, %r11
-
+            # calcula o tamanho armazenado
+            # subq $16, %r14
+            # imprime + ou .
             for2_inicio: 
             
-            #comparação for 2
+            # comparação for 2
             
-            cmpq %r13, 8(%rcx) #se %r13 < 8(%rcx)
+            cmpq 8(%r12),%r13 # se %r13 < 8(%rcx)
             jg for2_fim
 
-            #instrucoes for2 
-                
-                # movq %rcx, %r14 # %r14: status 
-                movq $0, %r15
-                cmp %rcx, %r15 #compara com 0 
-                je else_
+            # instrucoes for2 
+                # bloco atual em r12
+                cmp $0, (%r12) # compara status 
+                jne else_
 
-                #imprime . 
+                # imprime . 
                 mov $ponto, %rdi
                 call printf
 
                 jmp fim_if 
 
                 else_: 
-
-                #imprime +
+                # imprime +
                 mov $mais, %rdi
                 call printf
                 
                 fim_if:
             
-            #incrementa contador for
+            # incrementa contador for
             addq $1, %r13 
+            jmp for2_inicio
 
         for2_fim:
 
-        #imprime \n
+        # imprime \n
         mov $quebralinha, %rdi
         call printf
 
-        addq $16, %rcx
-        addq %r11, %rcx
+        addq $16, %r12  # soma o header
+        addq %r14, %r12 # soma tam
 
         jmp while_inicio
 
         while_fim:
     
-    addq $8,%rsp
+    #addq $8,%rsp
     popq %rbp 
-    ret 
+    ret
 
 
 # liberaMem(void *ptr)
