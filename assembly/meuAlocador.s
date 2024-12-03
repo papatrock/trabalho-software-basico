@@ -33,16 +33,17 @@ ajusta_brk:
 
         movq %rdi, %rdx 
         call ret_brk_atual           # Obter o valor atual do brk em %rax
-        addq %rdx, %rax              # Soma o deslocamento ao valor atual do brk
+        movq %rax,(brk_atual)
+        addq %rdx, (brk_atual)              # Soma o deslocamento ao valor atual do brk
     
     
-        movq %rax, %rdi          # Prepara o novo valor para ajustar o brk
+        movq brk_atual, %rdi          # Prepara o novo valor para ajustar o brk
         movq $12, %rax           # Syscall 'brk'
         syscall                  # Ajusta o brk
 
         # lea brk_atual(%rip), %r15 # endereço de brk atual em rbx
          
-        movq %rax, (brk_atual)         # novo valor do brk em brk_atual
+        # movq %rax, (brk_atual)         # novo valor do brk em brk_atual
 
     popq %rbp
     ret
